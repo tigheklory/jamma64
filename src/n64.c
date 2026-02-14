@@ -1,12 +1,16 @@
 #include "n64.h"
 
+#include <stdio.h>
+
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
+#include "hardware/sync.h"
 #include "pico/time.h"
 
 #include "inputs.h"
 #include "profile.h"
+#include "event_log.h"
 
 #include "n64_tx.pio.h"
 
@@ -19,20 +23,35 @@
 
 // RX frame timeout (high gap that ends a command frame).
 #define N64_CMD_GAP_US 24u
+// N64 bit cell is ~4us (1us/3us split). Add guard margin for TX complete.
+#define N64_TX_GUARD_US 8u
+// Wait for host to finish the current bit cell, then a short turnaround.
+#define N64_TX_TURNAROUND_US 1u
+// Command decode low-width thresholds (us) with jitter tolerance.
+#define N64_LOW_ONE_MAX_US 2u
+#define N64_LOW_ZERO_MIN_US 3u
+#define N64_LOW_ZERO_MAX_US 5u
 
 typedef struct {
   volatile bool receiving;
   volatile uint32_t last_fall_us;
   volatile uint32_t last_edge_us;
-  volatile uint32_t bits;
-  volatile uint8_t bit_count;
-  volatile bool frame_ready;
-  volatile uint32_t frame_bits;
-  volatile uint8_t frame_len;
+  volatile uint8_t cmd;
+  volatile uint8_t data_bits;
 } n64_rx_state_t;
 
 static n64_rx_state_t g_rx;
 static uint g_pio_offset;
+static volatile bool g_tx_active;
+static volatile uint32_t g_tx_done_us;
+static volatile bool g_dbg_cmd_pending;
+static volatile uint8_t g_dbg_cmd;
+static volatile bool g_dbg_tx_pending;
+static volatile uint8_t g_dbg_tx_len;
+static volatile uint8_t g_dbg_tx[4];
+static volatile bool g_dbg_invalid_pending;
+static volatile uint8_t g_dbg_invalid_low_us;
+static uint32_t g_poll_log_div;
 
 static inline uint32_t n64_now_us(void) {
   return time_us_32();
@@ -102,19 +121,26 @@ static void n64_send_bytes(const uint8_t *data, uint8_t len) {
   if (bit_count == 0 || bit_count > 32) return;
 
   uint32_t packed = n64_pack_bits_lsb_first(data, len);
+  uint32_t now = n64_now_us();
 
-  // Put count then payload for PIO frame send.
+  // Mark TX active before feeding PIO so RX IRQ can ignore self-generated edges.
+  g_tx_active = true;
+  g_tx_done_us = now + ((uint32_t)bit_count * 4u) + 4u + N64_TX_GUARD_US;
+
+  // Put count then payload for PIO frame send (PIO runs with 1us instruction timing).
   pio_sm_put_blocking(N64_PIO, N64_SM, (uint32_t)(bit_count - 1u));
   pio_sm_put_blocking(N64_PIO, N64_SM, packed);
 }
 
-static void n64_handle_command(uint8_t cmd, uint32_t raw_bits, uint8_t raw_len) {
-  (void)raw_bits;
-  (void)raw_len;
-
+static void n64_handle_command(uint8_t cmd) {
   // 0x00 and 0xFF are commonly used identify/status probes.
   if (cmd == 0x00 || cmd == 0xFF) {
     const uint8_t id[3] = {0x05, 0x00, 0x01};
+    g_dbg_tx_len = 3;
+    g_dbg_tx[0] = id[0];
+    g_dbg_tx[1] = id[1];
+    g_dbg_tx[2] = id[2];
+    g_dbg_tx_pending = true;
     n64_send_bytes(id, 3);
     return;
   }
@@ -123,6 +149,12 @@ static void n64_handle_command(uint8_t cmd, uint32_t raw_bits, uint8_t raw_len) 
   if (cmd == 0x01) {
     uint8_t report[4];
     n64_build_p1_report(report);
+    g_dbg_tx_len = 4;
+    g_dbg_tx[0] = report[0];
+    g_dbg_tx[1] = report[1];
+    g_dbg_tx[2] = report[2];
+    g_dbg_tx[3] = report[3];
+    g_dbg_tx_pending = true;
     n64_send_bytes(report, 4);
     return;
   }
@@ -132,14 +164,15 @@ static void n64_handle_command(uint8_t cmd, uint32_t raw_bits, uint8_t raw_len) 
 
 static void n64_gpio_irq(uint gpio, uint32_t events) {
   if (gpio != N64_P1_DATA_PIN) return;
+  if (g_tx_active) return;
 
   uint32_t now = n64_now_us();
 
   if (events & GPIO_IRQ_EDGE_FALL) {
     if (!g_rx.receiving) {
       g_rx.receiving = true;
-      g_rx.bits = 0;
-      g_rx.bit_count = 0;
+      g_rx.cmd = 0;
+      g_rx.data_bits = 0;
     }
     g_rx.last_fall_us = now;
     g_rx.last_edge_us = now;
@@ -149,11 +182,45 @@ static void n64_gpio_irq(uint gpio, uint32_t events) {
     if (!g_rx.receiving) return;
 
     uint32_t low_us = now - g_rx.last_fall_us;
-    // Console->controller encoding: 0 = 3us low, 1 = 1us low
-    uint32_t bit = (low_us >= 2u) ? 0u : 1u;
-    g_rx.bits = (g_rx.bits << 1) | bit;
-    g_rx.bit_count++;
-    g_rx.last_edge_us = now;
+    bool sym_is_one;
+    bool sym_valid = true;
+    if (low_us < N64_LOW_ONE_MAX_US) {
+      sym_is_one = true;
+    } else if (low_us >= N64_LOW_ZERO_MIN_US && low_us <= N64_LOW_ZERO_MAX_US) {
+      sym_is_one = false;
+    } else {
+      sym_valid = false;
+      sym_is_one = false;
+    }
+
+    if (!sym_valid) {
+      g_rx.receiving = false;
+      g_rx.cmd = 0;
+      g_rx.data_bits = 0;
+      g_dbg_invalid_low_us = (uint8_t)((low_us > 255u) ? 255u : low_us);
+      g_dbg_invalid_pending = true;
+      return;
+    }
+
+    if (g_rx.data_bits < 8u) {
+      g_rx.cmd = (uint8_t)((g_rx.cmd << 1) | (sym_is_one ? 1u : 0u));
+      g_rx.data_bits++;
+      g_rx.last_edge_us = now;
+      if (g_rx.data_bits == 8u) {
+        uint8_t cmd = g_rx.cmd;
+        g_rx.receiving = false;
+        g_dbg_cmd = cmd;
+        g_dbg_cmd_pending = true;
+
+        // Wait until current command bit high phase has completed.
+        uint32_t remain_high_us = sym_is_one ? 3u : 1u;
+        busy_wait_us_32(remain_high_us + N64_TX_TURNAROUND_US);
+        n64_handle_command(cmd);
+        g_rx.cmd = 0;
+        g_rx.data_bits = 0;
+      }
+      return;
+    }
   }
 }
 
@@ -192,24 +259,70 @@ bool n64_init(void) {
 }
 
 void n64_task(void) {
-  if (g_rx.receiving) {
-    uint32_t now = n64_now_us();
-    if ((now - g_rx.last_edge_us) > N64_CMD_GAP_US) {
-      g_rx.receiving = false;
-      g_rx.frame_ready = true;
-      g_rx.frame_bits = g_rx.bits;
-      g_rx.frame_len = g_rx.bit_count;
+  uint32_t now = n64_now_us();
+
+  // Release RX gating once PIO TX frame is guaranteed complete.
+  if (g_tx_active && (int32_t)(now - g_tx_done_us) >= 0) {
+    g_tx_active = false;
+    g_rx.receiving = false;
+    g_rx.cmd = 0;
+    g_rx.data_bits = 0;
+  }
+
+  // Fallback cleanup for malformed/partial commands.
+  if (g_rx.receiving && ((now - g_rx.last_edge_us) > N64_CMD_GAP_US)) {
+    g_rx.receiving = false;
+    g_rx.cmd = 0;
+    g_rx.data_bits = 0;
+  }
+
+  // Print debug outside IRQ context.
+  if (g_dbg_cmd_pending) {
+    uint8_t cmd;
+    uint32_t ints = save_and_disable_interrupts();
+    cmd = g_dbg_cmd;
+    g_dbg_cmd_pending = false;
+    restore_interrupts(ints);
+    printf("N64 RX CMD: 0x%02X\n", cmd);
+    if (cmd != 0x01 || (++g_poll_log_div % 32u) == 0u) {
+      event_log_appendf("N64 RX CMD: 0x%02X", cmd);
     }
   }
 
-  if (g_rx.frame_ready) {
-    uint32_t bits = g_rx.frame_bits;
-    uint8_t len = g_rx.frame_len;
-    g_rx.frame_ready = false;
+  if (g_dbg_tx_pending) {
+    uint8_t b[4];
+    uint8_t n;
+    uint32_t ints = save_and_disable_interrupts();
+    n = g_dbg_tx_len;
+    if (n > 4) n = 4;
+    for (uint8_t i = 0; i < n; i++) b[i] = g_dbg_tx[i];
+    g_dbg_tx_pending = false;
+    restore_interrupts(ints);
 
-    if (len >= 8) {
-      uint8_t cmd = (uint8_t)(bits >> (len - 8));
-      n64_handle_command(cmd, bits, len);
+    if (n == 0) {
+      printf("N64 TX: <none>\n");
+      event_log_appendf("N64 TX: <none>");
+    } else {
+      printf("N64 TX:");
+      for (uint8_t i = 0; i < n; i++) printf(" %02X", b[i]);
+      printf("\n");
+      if (n == 3) {
+        event_log_appendf("N64 TX: %02X %02X %02X", b[0], b[1], b[2]);
+      } else if (n == 4) {
+        if ((g_poll_log_div % 32u) == 0u) {
+          event_log_appendf("N64 TX: %02X %02X %02X %02X", b[0], b[1], b[2], b[3]);
+        }
+      }
     }
+  }
+
+  if (g_dbg_invalid_pending) {
+    uint8_t low_us;
+    uint32_t ints = save_and_disable_interrupts();
+    low_us = g_dbg_invalid_low_us;
+    g_dbg_invalid_pending = false;
+    restore_interrupts(ints);
+    printf("N64 RX INVALID: low=%uus\n", low_us);
+    event_log_appendf("N64 RX INVALID: low=%uus", low_us);
   }
 }

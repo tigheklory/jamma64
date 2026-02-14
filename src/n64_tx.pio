@@ -7,6 +7,7 @@
 ; Bit timing (1 MHz SM clock):
 ;   logical 1: low 1us, high 3us
 ;   logical 0: low 3us, high 1us
+;   controller stop bit: low 2us, high 2us
 ;
 ; Open-drain behavior is done by toggling pin direction:
 ;   pindirs=1 => drive low (pin output is preset to 0)
@@ -28,5 +29,8 @@ bit_zero:
     set pindirs, 0
 bit_next:
     jmp y-- bitloop
+    ; explicit controller stop bit after payload
+    set pindirs, 1 [1]
+    set pindirs, 0 [1]
     set pindirs, 0
 .wrap

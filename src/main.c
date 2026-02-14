@@ -16,6 +16,7 @@
 
 #include "wifi_config.h"
 #include "usb_msc.h"
+#include "event_log.h"
 
 // Helper to print IP once connected
 static void print_ip(void) {
@@ -63,6 +64,7 @@ int main() {
   sleep_ms(1500);
   printf("\nJAMMA64 starting...\n");
 
+  event_log_init();
   inputs_init();
   n64_init();
 
@@ -79,12 +81,18 @@ int main() {
   bool web_running = connect_wifi_if_configured();
 
   absolute_time_t next = make_timeout_time_ms(1000);
+  bool reboot_notice_printed = false;
   while (true) {
     // Keep N64 command/response handling low latency.
     n64_task();
 
     // Required for USB drive + serial to function
     tud_task();
+
+    // Persist logs only while not mounted to a host filesystem.
+    if (!tud_mounted()) {
+      event_log_flush_if_needed();
+    }
 
     // If we didn't have creds earlier, try occasionally (in case wifi.txt was just dropped)
     static absolute_time_t retry = {0};
@@ -99,6 +107,11 @@ int main() {
     // Status prints
     if (absolute_time_diff_us(get_absolute_time(), next) < 0) {
       if (web_running) print_ip();
+
+      if (usb_msc_reboot_required() && !reboot_notice_printed) {
+        printf("Wi-Fi saved; reboot required to apply changes.\n");
+        reboot_notice_printed = true;
+      }
 
       printf("Mode P1=%s P2=%s throw=%u\n",
              g_profile.p1_stick_mode == STICK_MODE_DPAD ? "DPAD" : "ANALOG",

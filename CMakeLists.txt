@@ -28,6 +28,7 @@ add_executable(jamma64
   src/web.c
   src/inputs.c
   src/profile.c
+  src/event_log.c
   src/wifi_config.c
   src/usb_msc.c
   src/usb_descriptors.c
