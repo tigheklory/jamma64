@@ -1,0 +1,32 @@
+.program n64_tx
+
+; Sends one N64 response frame.
+; TX FIFO word 0: bit_count_minus_1 (e.g. 31 for 32 bits)
+; TX FIFO word 1: packed bits, LSB first.
+;
+; Bit timing (1 MHz SM clock):
+;   logical 1: low 1us, high 3us
+;   logical 0: low 3us, high 1us
+;
+; Open-drain behavior is done by toggling pin direction:
+;   pindirs=1 => drive low (pin output is preset to 0)
+;   pindirs=0 => release line (external pull-up drives high)
+
+.wrap_target
+    pull block
+    mov y, osr
+    pull block
+bitloop:
+    out x, 1
+    jmp !x bit_zero
+bit_one:
+    set pindirs, 1
+    set pindirs, 0 [2]
+    jmp bit_next
+bit_zero:
+    set pindirs, 1 [2]
+    set pindirs, 0
+bit_next:
+    jmp y-- bitloop
+    set pindirs, 0
+.wrap
