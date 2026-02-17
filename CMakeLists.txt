@@ -9,6 +9,30 @@ project(jamma64 C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+# Firmware version tag for boot/log identification.
+# Format example: g1a2b3c4 (fallback: dev)
+execute_process(
+  COMMAND git -C ${CMAKE_CURRENT_LIST_DIR} rev-parse --short=8 HEAD
+  OUTPUT_VARIABLE JAMMA64_GIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET
+)
+if(NOT JAMMA64_GIT_HASH)
+  set(JAMMA64_GIT_HASH "dev")
+endif()
+
+execute_process(
+  COMMAND git -C ${CMAKE_CURRENT_LIST_DIR} status --porcelain
+  OUTPUT_VARIABLE JAMMA64_GIT_DIRTY
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET
+)
+if(JAMMA64_GIT_DIRTY)
+  set(JAMMA64_FW_VERSION_STR "g${JAMMA64_GIT_HASH}-dirty")
+else()
+  set(JAMMA64_FW_VERSION_STR "g${JAMMA64_GIT_HASH}")
+endif()
+
 pico_sdk_init()
 
 # --- Build the HTTPD content into pico_fsdata.inc ---
@@ -35,12 +59,14 @@ add_executable(jamma64
 )
 
 pico_generate_pio_header(jamma64 ${CMAKE_CURRENT_LIST_DIR}/src/n64_tx.pio)
+pico_generate_pio_header(jamma64 ${CMAKE_CURRENT_LIST_DIR}/src/n64_rx.pio)
 
 target_compile_definitions(jamma64 PRIVATE
   CFG_TUSB_CONFIG_FILE=\"tusb_config.h\"
   CFG_TUD_ENABLED=1
   CFG_TUD_CDC=1
   CFG_TUD_MSC=1
+  JAMMA64_FW_VERSION=\"${JAMMA64_FW_VERSION_STR}\"
 )
 
 

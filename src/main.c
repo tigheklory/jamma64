@@ -18,6 +18,10 @@
 #include "usb_msc.h"
 #include "event_log.h"
 
+#ifndef JAMMA64_FW_VERSION
+#define JAMMA64_FW_VERSION "dev"
+#endif
+
 // Helper to print IP once connected
 static void print_ip(void) {
   struct netif *n = netif_list;
@@ -31,7 +35,7 @@ static void print_ip(void) {
   printf("IP: (not assigned yet)\n");
 }
 
-static bool connect_wifi_if_configured(void) {
+static bool connect_wifi_if_configured(uint32_t timeout_ms) {
   wifi_creds_t creds;
   if (!wifi_config_load(&creds) || !creds.valid) {
     printf("No Wi-Fi creds saved.\n");
@@ -45,7 +49,7 @@ static bool connect_wifi_if_configured(void) {
     creds.ssid,
     creds.password,
     CYW43_AUTH_WPA2_AES_PSK,
-    30000
+    timeout_ms
   );
 
   if (r) {
@@ -61,10 +65,12 @@ static bool connect_wifi_if_configured(void) {
 
 int main() {
   stdio_init_all();
-  sleep_ms(1500);
-  printf("\nJAMMA64 starting...\n");
+  // Start protocol handling quickly so the console sees us during its initial probe.
+  sleep_ms(20);
+  printf("\nJAMMA64 starting (fw=%s)\n", JAMMA64_FW_VERSION);
 
   event_log_init();
+  event_log_appendf("BOOT JAMMA64 fw=%s", JAMMA64_FW_VERSION);
   inputs_init();
   n64_init();
 
@@ -78,7 +84,9 @@ int main() {
   }
   cyw43_arch_enable_sta_mode();
 
-  bool web_running = connect_wifi_if_configured();
+  // Do not block startup on Wi-Fi. N64 probing happens immediately at console boot.
+  bool web_running = false;
+  absolute_time_t next_wifi_try = make_timeout_time_ms(10000);
 
   absolute_time_t next = make_timeout_time_ms(1000);
   bool reboot_notice_printed = false;
@@ -94,13 +102,11 @@ int main() {
       event_log_flush_if_needed();
     }
 
-    // If we didn't have creds earlier, try occasionally (in case wifi.txt was just dropped)
-    static absolute_time_t retry = {0};
+    // Background Wi-Fi connect attempts (short timeout to keep N64 loop responsive).
     if (!web_running) {
-      if (is_nil_time(retry)) retry = make_timeout_time_ms(2000);
-      if (absolute_time_diff_us(get_absolute_time(), retry) < 0) {
-        web_running = connect_wifi_if_configured();
-        retry = delayed_by_ms(retry, 2000);
+      if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
+        web_running = connect_wifi_if_configured(1200);
+        next_wifi_try = delayed_by_ms(next_wifi_try, 10000);
       }
     }
 
