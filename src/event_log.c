@@ -97,10 +97,8 @@ void event_log_appendf(const char *fmt, ...) {
   g_dirty = true;
 }
 
-void event_log_flush_if_needed(void) {
+void event_log_flush_now(void) {
   if (!g_dirty) return;
-  if (absolute_time_diff_us(get_absolute_time(), g_next_flush) >= 0) return;
-
   log_blob_t out;
   memset(&out, 0xFF, sizeof(out));
   out.magic = LOG_MAGIC;
@@ -116,4 +114,19 @@ void event_log_flush_if_needed(void) {
 
   g_dirty = false;
   g_next_flush = delayed_by_ms(get_absolute_time(), LOG_FLUSH_INTERVAL_MS);
+}
+
+void event_log_clear(void) {
+  g_log.magic = LOG_MAGIC;
+  g_log.len = 0;
+  g_log.crc = 0;
+  g_log.reserved = 0;
+  g_log.data[0] = '\0';
+  g_dirty = true;
+}
+
+void event_log_flush_if_needed(void) {
+  if (!g_dirty) return;
+  if (absolute_time_diff_us(get_absolute_time(), g_next_flush) >= 0) return;
+  event_log_flush_now();
 }

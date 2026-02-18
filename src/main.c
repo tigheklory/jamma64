@@ -22,6 +22,9 @@
 #define JAMMA64_FW_VERSION "dev"
 #endif
 
+#define WIFI_STACK_INIT_DELAY_MS 2500u
+#define WIFI_STACK_INIT_RETRY_MS 5000u
+
 // Helper to print IP once connected
 static void print_ip(void) {
   struct netif *n = netif_list;
@@ -77,14 +80,9 @@ int main() {
   // Start USB (Drive + Serial)
   usb_msc_init();
 
-  // Wi-Fi chip init
-  if (cyw43_arch_init()) {
-    printf("cyw43_arch_init failed\n");
-    return 1;
-  }
-  cyw43_arch_enable_sta_mode();
-
-  // Do not block startup on Wi-Fi. N64 probing happens immediately at console boot.
+  // Do not block startup on Wi-Fi init. N64 probing happens immediately at console boot.
+  bool wifi_stack_ready = false;
+  absolute_time_t next_wifi_stack_init = make_timeout_time_ms(WIFI_STACK_INIT_DELAY_MS);
   bool web_running = false;
   absolute_time_t next_wifi_try = make_timeout_time_ms(10000);
 
@@ -102,8 +100,21 @@ int main() {
       event_log_flush_if_needed();
     }
 
+    // Defer potentially slow Wi-Fi chip init until N64 protocol handling is already active.
+    if (!wifi_stack_ready && absolute_time_diff_us(get_absolute_time(), next_wifi_stack_init) < 0) {
+      int wifi_init = cyw43_arch_init();
+      if (wifi_init == 0) {
+        cyw43_arch_enable_sta_mode();
+        wifi_stack_ready = true;
+        printf("Wi-Fi stack ready.\n");
+      } else {
+        printf("cyw43_arch_init failed: %d\n", wifi_init);
+        next_wifi_stack_init = make_timeout_time_ms(WIFI_STACK_INIT_RETRY_MS);
+      }
+    }
+
     // Background Wi-Fi connect attempts (short timeout to keep N64 loop responsive).
-    if (!web_running) {
+    if (wifi_stack_ready && !web_running) {
       if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
         web_running = connect_wifi_if_configured(1200);
         next_wifi_try = delayed_by_ms(next_wifi_try, 10000);

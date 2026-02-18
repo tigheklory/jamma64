@@ -15,6 +15,16 @@
 #include "n64_tx.pio.h"
 #include "n64_rx.pio.h"
 
+#define N64_DIAG_ENABLE 1
+
+#if N64_DIAG_ENABLE
+#define N64_DIAG_PRINTF(...) printf(__VA_ARGS__)
+#define N64_DIAG_LOG(...) event_log_appendf(__VA_ARGS__)
+#else
+#define N64_DIAG_PRINTF(...) ((void)0)
+#define N64_DIAG_LOG(...) ((void)0)
+#endif
+
 #define N64_P1_DATA_PIN 2
 
 #define N64_PIO pio0
@@ -46,6 +56,7 @@ static volatile uint16_t g_dbg_frame_raw;
 
 static uint32_t g_poll_log_div;
 static uint32_t g_frame_err_count;
+static uint32_t g_frame_err_log_div;
 static uint32_t g_timeout_count;
 static uint32_t g_cmd_ok_count;
 static uint32_t g_last_rx_us;
@@ -125,15 +136,19 @@ static inline void n64_handle_raw_frame(uint16_t raw9, uint32_t now) {
     g_dbg_cmd = cmd;
     g_dbg_cmd_pending = true;
     if ((g_cmd_ok_count & 0x3Fu) == 0u) {
-      event_log_appendf("N64 RX CMD_OK raw=0x%03X cmd=0x%02X ok=%lu",
-                        raw9, cmd, (unsigned long)g_cmd_ok_count);
+      N64_DIAG_LOG("N64 RX CMD_OK raw=0x%03X cmd=0x%02X ok=%lu",
+                   raw9, cmd, (unsigned long)g_cmd_ok_count);
     }
     if (N64_RX_TO_TX_DELAY_US) busy_wait_us_32(N64_RX_TO_TX_DELAY_US);
     n64_handle_command(cmd);
   } else {
     g_frame_err_count++;
-    g_dbg_frame_raw = raw9;
-    g_dbg_frame_pending = true;
+    // RX can observe short misaligned artifacts between valid host frames.
+    // Keep counting them for diagnostics, but don't flood serial/log output.
+    if ((++g_frame_err_log_div % 64u) == 0u) {
+      g_dbg_frame_raw = raw9;
+      g_dbg_frame_pending = true;
+    }
   }
 }
 
@@ -149,10 +164,10 @@ static void n64_reset_rx_sm(bool log_event) {
   g_last_recovery_frame_count = g_frame_err_count;
 
   if (log_event) {
-    event_log_appendf("N64 RX RECOVER ok=%lu frame_err=%lu timeout=%lu",
-                      (unsigned long)g_cmd_ok_count,
-                      (unsigned long)g_frame_err_count,
-                      (unsigned long)g_timeout_count);
+    N64_DIAG_LOG("N64 RX RECOVER ok=%lu frame_err=%lu timeout=%lu",
+                 (unsigned long)g_cmd_ok_count,
+                 (unsigned long)g_frame_err_count,
+                 (unsigned long)g_timeout_count);
   }
 }
 
@@ -160,6 +175,12 @@ static inline uint8_t clamp_analog(bool neg, bool pos, uint8_t mag) {
   if (neg && !pos) return (uint8_t)(256u - mag);
   if (pos && !neg) return mag;
   return 0;
+}
+
+static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
+  uint8_t phys = g_profile.map[out];
+  if (phys == 0xFFu || phys >= IN_COUNT) return false;
+  return inputs_get(in, (phys_in_t)phys);
 }
 
 static void n64_update_bootsel_test_mode(void) {
@@ -173,8 +194,8 @@ static void n64_update_bootsel_test_mode(void) {
     g_test_step = (uint8_t)((g_test_step + 1u) % 16u);
     g_bootsel_last_change_us = now;
     const char *name = n64_test_step_name(g_test_step);
-    printf("N64 TEST step=%u (%s)\n", (unsigned)g_test_step, name);
-    event_log_appendf("N64 TEST step=%u (%s)", (unsigned)g_test_step, name);
+    N64_DIAG_PRINTF("N64 TEST step=%u (%s)\n", (unsigned)g_test_step, name);
+    N64_DIAG_LOG("N64 TEST step=%u (%s)", (unsigned)g_test_step, name);
   }
 
   g_bootsel_last = pressed;
@@ -213,22 +234,25 @@ static void n64_build_p1_report(uint8_t out[4]) {
   inputs_t in = inputs_read();
 
   uint8_t b0 = 0;
-  if (inputs_get(in, IN_P1_B1))    b0 |= 0x80;
-  if (inputs_get(in, IN_P1_B2))    b0 |= 0x40;
-  if (inputs_get(in, IN_P1_B3))    b0 |= 0x20;
-  if (inputs_get(in, IN_P1_START)) b0 |= 0x10;
+  if (n64_map_pressed(in, N64_A))     b0 |= 0x80;
+  if (n64_map_pressed(in, N64_B))     b0 |= 0x40;
+  if (n64_map_pressed(in, N64_Z))     b0 |= 0x20;
+  if (n64_map_pressed(in, N64_START)) b0 |= 0x10;
 
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
-    if (inputs_get(in, IN_P1_UP))    b0 |= 0x08;
-    if (inputs_get(in, IN_P1_DOWN))  b0 |= 0x04;
-    if (inputs_get(in, IN_P1_LEFT))  b0 |= 0x02;
-    if (inputs_get(in, IN_P1_RIGHT)) b0 |= 0x01;
+    if (n64_map_pressed(in, N64_DU)) b0 |= 0x08;
+    if (n64_map_pressed(in, N64_DD)) b0 |= 0x04;
+    if (n64_map_pressed(in, N64_DL)) b0 |= 0x02;
+    if (n64_map_pressed(in, N64_DR)) b0 |= 0x01;
   }
 
   uint8_t b1 = 0;
-  if (inputs_get(in, IN_P1_B5)) b1 |= 0x20;
-  if (inputs_get(in, IN_P1_B6)) b1 |= 0x10;
-  if (inputs_get(in, IN_P1_B4)) b1 |= 0x08;
+  if (n64_map_pressed(in, N64_L))  b1 |= 0x20;
+  if (n64_map_pressed(in, N64_R))  b1 |= 0x10;
+  if (n64_map_pressed(in, N64_CU)) b1 |= 0x08;
+  if (n64_map_pressed(in, N64_CD)) b1 |= 0x04;
+  if (n64_map_pressed(in, N64_CL)) b1 |= 0x02;
+  if (n64_map_pressed(in, N64_CR)) b1 |= 0x01;
 
   uint8_t throw_mag = g_profile.analog_throw;
   if (throw_mag > 127) throw_mag = 127;
@@ -236,8 +260,8 @@ static void n64_build_p1_report(uint8_t out[4]) {
   uint8_t sx = 0;
   uint8_t sy = 0;
   if (g_profile.p1_stick_mode == STICK_MODE_ANALOG) {
-    sx = clamp_analog(inputs_get(in, IN_P1_LEFT), inputs_get(in, IN_P1_RIGHT), throw_mag);
-    sy = clamp_analog(inputs_get(in, IN_P1_DOWN), inputs_get(in, IN_P1_UP), throw_mag);
+    sx = clamp_analog(n64_map_pressed(in, N64_DL), n64_map_pressed(in, N64_DR), throw_mag);
+    sy = clamp_analog(n64_map_pressed(in, N64_DD), n64_map_pressed(in, N64_DU), throw_mag);
   }
 
   out[0] = b0;
@@ -360,7 +384,7 @@ void n64_task(void) {
     g_timeout_count++;
     g_timeout_latched = true;
     if (g_timeout_count <= 4u || (g_timeout_count % N64_TIMEOUT_LOG_EVERY) == 0u) {
-      event_log_appendf("N64 RX TIMEOUT cnt=%lu", (unsigned long)g_timeout_count);
+      N64_DIAG_LOG("N64 RX TIMEOUT cnt=%lu", (unsigned long)g_timeout_count);
     }
   }
 
@@ -376,11 +400,11 @@ void n64_task(void) {
   // lets us distinguish "no console traffic" from "decode failure".
   if ((uint32_t)(now - g_last_diag_log_us) > 2000000u) {
     g_last_diag_log_us = now;
-    event_log_appendf("N64 DIAG ok=%lu frame_err=%lu timeout=%lu tx=%u",
-                      (unsigned long)g_cmd_ok_count,
-                      (unsigned long)g_frame_err_count,
-                      (unsigned long)g_timeout_count,
-                      g_tx_active ? 1u : 0u);
+    N64_DIAG_LOG("N64 DIAG ok=%lu frame_err=%lu timeout=%lu tx=%u",
+                 (unsigned long)g_cmd_ok_count,
+                 (unsigned long)g_frame_err_count,
+                 (unsigned long)g_timeout_count,
+                 g_tx_active ? 1u : 0u);
   }
 
   if (g_dbg_cmd_pending) {
@@ -390,15 +414,16 @@ void n64_task(void) {
     g_dbg_cmd_pending = false;
     restore_interrupts(ints);
 
-    printf("N64 RX CMD: 0x%02X\n", cmd);
-    if (cmd != 0x01u || (++g_poll_log_div % 32u) == 0u) {
-      event_log_appendf("N64 RX CMD: 0x%02X", cmd);
+    bool log_poll = (cmd != 0x01u) || ((++g_poll_log_div % 32u) == 0u);
+    if (log_poll) {
+      N64_DIAG_PRINTF("N64 RX CMD: 0x%02X\n", cmd);
+      N64_DIAG_LOG("N64 RX CMD: 0x%02X", cmd);
     }
     if ((g_cmd_ok_count % 64u) == 0u) {
-      event_log_appendf("N64 RX STATS ok=%lu frame_err=%lu timeout=%lu",
-                        (unsigned long)g_cmd_ok_count,
-                        (unsigned long)g_frame_err_count,
-                        (unsigned long)g_timeout_count);
+      N64_DIAG_LOG("N64 RX STATS ok=%lu frame_err=%lu timeout=%lu",
+                   (unsigned long)g_cmd_ok_count,
+                   (unsigned long)g_frame_err_count,
+                   (unsigned long)g_timeout_count);
     }
   }
 
@@ -412,16 +437,18 @@ void n64_task(void) {
     g_dbg_tx_pending = false;
     restore_interrupts(ints);
 
-    printf("N64 TX:");
-    for (uint8_t i = 0; i < n; i++) printf(" %02X", b[i]);
-    printf("\n");
-
     if (n == 3) {
-      event_log_appendf("N64 TX: %02X %02X %02X", b[0], b[1], b[2]);
+      N64_DIAG_PRINTF("N64 TX: %02X %02X %02X\n", b[0], b[1], b[2]);
+      N64_DIAG_LOG("N64 TX: %02X %02X %02X", b[0], b[1], b[2]);
     } else if (n == 4) {
       if ((g_poll_log_div % 32u) == 0u) {
-        event_log_appendf("N64 TX: %02X %02X %02X %02X", b[0], b[1], b[2], b[3]);
+        N64_DIAG_PRINTF("N64 TX: %02X %02X %02X %02X\n", b[0], b[1], b[2], b[3]);
+        N64_DIAG_LOG("N64 TX: %02X %02X %02X %02X", b[0], b[1], b[2], b[3]);
       }
+    } else {
+      N64_DIAG_PRINTF("N64 TX:");
+      for (uint8_t i = 0; i < n; i++) N64_DIAG_PRINTF(" %02X", b[i]);
+      N64_DIAG_PRINTF("\n");
     }
   }
 
@@ -431,7 +458,7 @@ void n64_task(void) {
     raw9 = g_dbg_frame_raw;
     g_dbg_frame_pending = false;
     restore_interrupts(ints);
-    printf("N64 RX FRAME_ERR raw=0x%03X\n", raw9);
-    event_log_appendf("N64 RX FRAME_ERR raw=0x%03X cnt=%lu", raw9, (unsigned long)g_frame_err_count);
+    N64_DIAG_PRINTF("N64 RX FRAME_ERR raw=0x%03X\n", raw9);
+    N64_DIAG_LOG("N64 RX FRAME_ERR raw=0x%03X cnt=%lu", raw9, (unsigned long)g_frame_err_count);
   }
 }

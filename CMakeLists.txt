@@ -87,7 +87,7 @@ target_link_libraries(jamma64
   hardware_watchdog
 )
 
-pico_enable_stdio_usb(jamma64 0)
+pico_enable_stdio_usb(jamma64 1)
 pico_enable_stdio_uart(jamma64 0)
 
 pico_add_extra_outputs(jamma64)

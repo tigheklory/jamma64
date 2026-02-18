@@ -43,6 +43,7 @@ static const char k_wifi_template[] =
   "# Edit values and save this file.\r\n"
   "SSID=\r\n"
   "PASSWORD=\r\n"
+  "# Optional: CLEAR_LOG=1\r\n"
   "# Optional: REBOOT=1\r\n";
 
 static inline uint8_t *lba_ptr(uint32_t lba) {
@@ -268,6 +269,25 @@ static bool wifi_txt_requests_reboot(const char *buf, uint32_t len) {
   return false;
 }
 
+static bool wifi_txt_requests_clear_log(const char *buf, uint32_t len) {
+  char tmp[512];
+  if (len >= sizeof(tmp)) len = sizeof(tmp) - 1;
+  memcpy(tmp, buf, len);
+  tmp[len] = '\0';
+
+  char *saveptr = NULL;
+  for (char *line = strtok_r(tmp, "\r\n", &saveptr); line; line = strtok_r(NULL, "\r\n", &saveptr)) {
+    while (*line == ' ' || *line == '\t') line++;
+    if (!*line || *line == '#') continue;
+    if (!strncasecmp(line, "CLEAR_LOG=", 10)) {
+      const char *v = line + 10;
+      while (*v == ' ' || *v == '\t') v++;
+      if (!strcasecmp(v, "1") || !strcasecmp(v, "TRUE") || !strcasecmp(v, "YES")) return true;
+    }
+  }
+  return false;
+}
+
 bool usb_msc_reboot_required(void) {
   return reboot_required;
 }
@@ -302,6 +322,11 @@ void tud_msc_write10_complete_cb(uint8_t lun) {
     char wifi_txt[512];
     uint32_t len = 0;
     if (read_wifi_file(wifi_txt, sizeof(wifi_txt), &len)) {
+      if (wifi_txt_requests_clear_log(wifi_txt, len)) {
+        event_log_clear();
+        event_log_flush_now();
+        printf("Event log cleared from WIFI.TXT.\n");
+      }
       if (usb_msc_handle_wifi_txt(wifi_txt, (unsigned)len)) {
         reboot_required = true;
         if (wifi_txt_requests_reboot(wifi_txt, len)) {
