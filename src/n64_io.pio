@@ -1,0 +1,53 @@
+.program n64_io
+
+; Single-state-machine Joybus path:
+; 1) Receive 8-bit command from host
+; 2) Push command to RX FIFO
+; 3) Pull prepacked response metadata/data from TX FIFO
+; 4) Transmit response and controller stop bit
+;
+; Run SM at 1 MHz.
+
+.wrap_target
+start:
+    wait 1 pin 0
+    wait 0 pin 0
+    set x, 7
+rx_bitloop:
+    ; sample each host bit at ~2us from falling edge, 4us cadence
+    nop
+    in pins, 1
+    jmp x-- rx_bitloop [1]
+
+    push block
+    mov isr, null
+
+    ; Short deterministic handoff window for CPU IRQ to queue this frame's response.
+    ; Keeps same-frame input behavior while reducing pull stall jitter.
+    nop [1]
+
+    ; host command captured; now fetch response descriptor/data
+    pull block      ; bit_count_minus_1
+    mov y, osr
+    pull block      ; packed payload bits (LSB-first stream)
+
+tx_bitloop:
+    out x, 1
+    jmp !x tx_zero
+tx_one:
+    ; logical 1: low 1us, high 3us
+    set pindirs, 1
+    set pindirs, 0 [2]
+    jmp tx_next
+tx_zero:
+    ; logical 0: low 3us, high 1us
+    set pindirs, 1 [2]
+    set pindirs, 0
+tx_next:
+    jmp y-- tx_bitloop
+
+    ; Controller stop bit: low 2us, high 1us
+    set pindirs, 1 [1]
+    set pindirs, 0
+    jmp start
+.wrap

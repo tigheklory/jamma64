@@ -1,17 +1,17 @@
 .program n64_rx
 
-; Receives 8-bit host command + stop bit using fixed-cadence sampling.
+; Receives 8-bit host command using fixed-cadence sampling.
 ; This SM is intended to run at 2 MHz (0.5us/instruction).
 ; After start-of-frame falling edge, each symbol is sampled at ~2us
 ; from the symbol's falling edge, then advances by fixed 4us cadence.
 ;
-; Pushes one 9-bit word to RX FIFO (8 data + stop).
+; Pushes one 8-bit command byte to RX FIFO.
 
 .wrap_target
 start:
     wait 1 pin 0
     wait 0 pin 0
-    set x, 8
+    set x, 7
 bitloop:
     ; 2us from edge to sample point
     nop [2]

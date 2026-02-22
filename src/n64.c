@@ -4,6 +4,7 @@
 
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
+#include "hardware/irq.h"
 #include "hardware/sync.h"
 #include "pico/time.h"
 #include "pico/stdlib.h"
@@ -12,10 +13,13 @@
 #include "profile.h"
 #include "event_log.h"
 
-#include "n64_tx.pio.h"
-#include "n64_rx.pio.h"
+#include "n64_io.pio.h"
 
-#define N64_DIAG_ENABLE 1
+#ifndef JAMMA64_ENABLE_N64_DIAG
+#define JAMMA64_ENABLE_N64_DIAG 0
+#endif
+
+#define N64_DIAG_ENABLE JAMMA64_ENABLE_N64_DIAG
 
 #if N64_DIAG_ENABLE
 #define N64_DIAG_PRINTF(...) printf(__VA_ARGS__)
@@ -26,25 +30,30 @@
 #endif
 
 #define N64_P1_DATA_PIN 2
+#define N64_DBG_TX_PIN 3
 
 #define N64_PIO pio0
-#define N64_TX_SM 0
-#define N64_RX_SM 1
+#define N64_SM 0
 
-#define N64_TX_GUARD_US 8u
 #define N64_RX_TIMEOUT_US 250000u
 // Delay from decoded RX frame to TX start to avoid overlapping host stop-bit high.
-#define N64_RX_TO_TX_DELAY_US 2u
+#ifndef JAMMA64_RX_TO_TX_DELAY_US
+#define JAMMA64_RX_TO_TX_DELAY_US 0
+#endif
+#define N64_RX_TO_TX_DELAY_US ((uint32_t)JAMMA64_RX_TO_TX_DELAY_US)
 #define N64_TEST_BOOTSEL_DEBOUNCE_US 200000u
 #define N64_TIMEOUT_LOG_EVERY 32u
 #define N64_RECOVERY_TIMEOUT_BURST 64u
 #define N64_RECOVERY_FRAME_BURST 12u
 
-static uint g_tx_offset;
-static uint g_rx_offset;
+// Disable BOOTSEL-driven synthetic button test mode during controller validation.
+#define N64_ENABLE_BOOTSEL_TEST 0
+#define N64_ID_BITCOUNT 24u
+#define N64_REPORT_BITCOUNT 32u
+#define N64_ID_PACKED 0x004000A0u
+#define N64_BUTTON_HOLD_US 120000u
 
-static volatile bool g_tx_active;
-static volatile uint32_t g_tx_done_us;
+static uint g_io_offset;
 
 static volatile bool g_dbg_cmd_pending;
 static volatile uint8_t g_dbg_cmd;
@@ -68,10 +77,18 @@ static bool g_bootsel_last;
 static uint32_t g_bootsel_last_change_us;
 static uint8_t g_test_step;
 static bool g_test_mode_active;
+static uint32_t g_start_hold_until_us;
+static uint32_t g_z_hold_until_us;
+static volatile uint32_t g_cached_report_packed;
+static volatile uint8_t g_cached_report[4];
 
 // Provided by TinyUSB RP2040 board support.
 extern bool get_bootsel_button(void);
 static void n64_handle_command(uint8_t cmd);
+static void n64_rx_irq_handler(void);
+static void n64_refresh_cached_report(void);
+static uint32_t n64_pack_bits_lsb_first(const uint8_t *data, uint8_t len);
+static void n64_send_packed(uint8_t bit_count, uint32_t packed);
 
 static const char *n64_test_step_name(uint8_t step) {
   static const char *k_names[16] = {
@@ -103,41 +120,28 @@ static inline bool is_known_cmd(uint8_t cmd) {
   return (cmd == 0x00u || cmd == 0x01u || cmd == 0xFFu);
 }
 
-static bool n64_decode_frame(uint16_t raw9, uint8_t *cmd_out) {
-  // Try only non-bit-reversed packings.
-  // Stop bit must match the same bit alignment as the decoded command byte.
-  uint8_t d0 = (uint8_t)(raw9 & 0xFFu);
-  uint8_t s0 = (uint8_t)((raw9 >> 8) & 1u);
-  uint8_t d1 = (uint8_t)((raw9 >> 1) & 0xFFu);
-  uint8_t s1 = (uint8_t)(raw9 & 1u);
-
-  // Alignment 0: d0 + s0
-  if (s0 == 1u && is_known_cmd(d0)) {
-    *cmd_out = d0;
+static bool n64_decode_frame(uint8_t raw8, uint8_t *cmd_out) {
+  if (is_known_cmd(raw8)) {
+    *cmd_out = raw8;
     return true;
   }
-
-  // Alignment 1: d1 + s1
-  if (s1 == 1u && is_known_cmd(d1)) {
-    *cmd_out = d1;
-    return true;
-  }
-
   return false;
 }
 
-static inline void n64_handle_raw_frame(uint16_t raw9, uint32_t now) {
+static inline void n64_handle_raw_frame(uint8_t raw8, uint32_t now) {
   uint8_t cmd = 0;
   g_last_rx_us = now;
   g_timeout_latched = false;
 
-  if (n64_decode_frame(raw9, &cmd)) {
+  if (n64_decode_frame(raw8, &cmd)) {
     g_cmd_ok_count++;
+#if N64_DIAG_ENABLE
     g_dbg_cmd = cmd;
     g_dbg_cmd_pending = true;
+#endif
     if ((g_cmd_ok_count & 0x3Fu) == 0u) {
-      N64_DIAG_LOG("N64 RX CMD_OK raw=0x%03X cmd=0x%02X ok=%lu",
-                   raw9, cmd, (unsigned long)g_cmd_ok_count);
+      N64_DIAG_LOG("N64 RX CMD_OK raw=0x%02X cmd=0x%02X ok=%lu",
+                   raw8, cmd, (unsigned long)g_cmd_ok_count);
     }
     if (N64_RX_TO_TX_DELAY_US) busy_wait_us_32(N64_RX_TO_TX_DELAY_US);
     n64_handle_command(cmd);
@@ -146,29 +150,29 @@ static inline void n64_handle_raw_frame(uint16_t raw9, uint32_t now) {
     // RX can observe short misaligned artifacts between valid host frames.
     // Keep counting them for diagnostics, but don't flood serial/log output.
     if ((++g_frame_err_log_div % 64u) == 0u) {
-      g_dbg_frame_raw = raw9;
+      g_dbg_frame_raw = raw8;
       g_dbg_frame_pending = true;
     }
+    // Single-SM pipeline must always be fed a response after each captured frame.
+    n64_send_packed(N64_ID_BITCOUNT, N64_ID_PACKED);
+  }
+}
+
+static void n64_rx_irq_handler(void) {
+  while (!pio_sm_is_rx_fifo_empty(N64_PIO, N64_SM)) {
+    uint32_t raw = pio_sm_get(N64_PIO, N64_SM);
+    uint32_t now = n64_now_us();
+    n64_handle_raw_frame((uint8_t)(raw & 0xFFu), now);
   }
 }
 
 static void n64_reset_rx_sm(bool log_event) {
-  pio_sm_set_enabled(N64_PIO, N64_RX_SM, false);
-  pio_sm_clear_fifos(N64_PIO, N64_RX_SM);
-  pio_sm_restart(N64_PIO, N64_RX_SM);
-  pio_sm_set_enabled(N64_PIO, N64_RX_SM, true);
-
+  (void)log_event;
+  // Single-SM path does not need RX SM resets.
   g_timeout_latched = false;
   g_last_rx_us = 0;
   g_last_recovery_timeout_count = g_timeout_count;
   g_last_recovery_frame_count = g_frame_err_count;
-
-  if (log_event) {
-    N64_DIAG_LOG("N64 RX RECOVER ok=%lu frame_err=%lu timeout=%lu",
-                 (unsigned long)g_cmd_ok_count,
-                 (unsigned long)g_frame_err_count,
-                 (unsigned long)g_timeout_count);
-  }
 }
 
 static inline uint8_t clamp_analog(bool neg, bool pos, uint8_t mag) {
@@ -184,6 +188,9 @@ static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
 }
 
 static void n64_update_bootsel_test_mode(void) {
+#if !N64_ENABLE_BOOTSEL_TEST
+  return;
+#else
   uint32_t now = n64_now_us();
   // get_bootsel_button() returns raw CS level (high when not pressed).
   bool pressed = !get_bootsel_button();
@@ -199,9 +206,14 @@ static void n64_update_bootsel_test_mode(void) {
   }
 
   g_bootsel_last = pressed;
+#endif
 }
 
 static void n64_apply_bootsel_test_override(uint8_t out[4]) {
+#if !N64_ENABLE_BOOTSEL_TEST
+  (void)out;
+  return;
+#else
   if (!g_test_mode_active) return;
 
   out[0] = 0;
@@ -228,16 +240,23 @@ static void n64_apply_bootsel_test_override(uint8_t out[4]) {
     case 15: out[2] = 80; break;    // Stick Right
     default: break;
   }
+#endif
 }
 
 static void n64_build_p1_report(uint8_t out[4]) {
   inputs_t in = inputs_read();
+  uint32_t now = n64_now_us();
 
   uint8_t b0 = 0;
   if (n64_map_pressed(in, N64_A))     b0 |= 0x80;
   if (n64_map_pressed(in, N64_B))     b0 |= 0x40;
-  if (n64_map_pressed(in, N64_Z))     b0 |= 0x20;
-  if (n64_map_pressed(in, N64_START)) b0 |= 0x10;
+
+  bool z_pressed = n64_map_pressed(in, N64_Z);
+  bool start_pressed = n64_map_pressed(in, N64_START);
+  if (z_pressed) g_z_hold_until_us = now + N64_BUTTON_HOLD_US;
+  if (start_pressed) g_start_hold_until_us = now + N64_BUTTON_HOLD_US;
+  if (z_pressed || (int32_t)(g_z_hold_until_us - now) > 0) b0 |= 0x20;
+  if (start_pressed || (int32_t)(g_start_hold_until_us - now) > 0) b0 |= 0x10;
 
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
     if (n64_map_pressed(in, N64_DU)) b0 |= 0x08;
@@ -254,14 +273,17 @@ static void n64_build_p1_report(uint8_t out[4]) {
   if (n64_map_pressed(in, N64_CL)) b1 |= 0x02;
   if (n64_map_pressed(in, N64_CR)) b1 |= 0x01;
 
-  uint8_t throw_mag = g_profile.analog_throw;
-  if (throw_mag > 127) throw_mag = 127;
+  bool su = n64_map_pressed(in, N64_DU);
+  bool sd = n64_map_pressed(in, N64_DD);
+  bool sl = n64_map_pressed(in, N64_DL);
+  bool sr = n64_map_pressed(in, N64_DR);
+  uint8_t mag = g_profile.analog_throw;
 
   uint8_t sx = 0;
   uint8_t sy = 0;
   if (g_profile.p1_stick_mode == STICK_MODE_ANALOG) {
-    sx = clamp_analog(n64_map_pressed(in, N64_DL), n64_map_pressed(in, N64_DR), throw_mag);
-    sy = clamp_analog(n64_map_pressed(in, N64_DD), n64_map_pressed(in, N64_DU), throw_mag);
+    sx = clamp_analog(sl, sr, mag);
+    sy = clamp_analog(sd, su, mag);
   }
 
   out[0] = b0;
@@ -270,6 +292,20 @@ static void n64_build_p1_report(uint8_t out[4]) {
   out[3] = sy;
 
   n64_apply_bootsel_test_override(out);
+}
+
+static void n64_refresh_cached_report(void) {
+  uint8_t out[4];
+  n64_build_p1_report(out);
+  uint32_t packed = n64_pack_bits_lsb_first(out, 4);
+
+  uint32_t ints = save_and_disable_interrupts();
+  g_cached_report_packed = packed;
+  g_cached_report[0] = out[0];
+  g_cached_report[1] = out[1];
+  g_cached_report[2] = out[2];
+  g_cached_report[3] = out[3];
+  restore_interrupts(ints);
 }
 
 static uint32_t n64_pack_bits_lsb_first(const uint8_t *data, uint8_t len) {
@@ -285,100 +321,106 @@ static uint32_t n64_pack_bits_lsb_first(const uint8_t *data, uint8_t len) {
   return packed;
 }
 
-static void n64_send_bytes(const uint8_t *data, uint8_t len) {
-  uint8_t bit_count = (uint8_t)(len * 8u);
+static void n64_send_packed(uint8_t bit_count, uint32_t packed) {
   if (bit_count == 0 || bit_count > 32) return;
 
-  uint32_t packed = n64_pack_bits_lsb_first(data, len);
-  uint32_t now = n64_now_us();
+  #if N64_DIAG_ENABLE
+  // Optional scope strobe for timing debug; compiled out in normal builds.
+  gpio_put(N64_DBG_TX_PIN, 1);
+  busy_wait_us_32(2u);
+  gpio_put(N64_DBG_TX_PIN, 0);
+  #endif
 
-  g_tx_active = true;
-  g_tx_done_us = now + ((uint32_t)bit_count * 4u) + 4u + N64_TX_GUARD_US;
-
-  // Gate RX during TX to avoid self-decoding from our own output transitions.
-  pio_sm_set_enabled(N64_PIO, N64_RX_SM, false);
-
-  pio_sm_put_blocking(N64_PIO, N64_TX_SM, (uint32_t)(bit_count - 1u));
-  pio_sm_put_blocking(N64_PIO, N64_TX_SM, packed);
+  pio_sm_put_blocking(N64_PIO, N64_SM, (uint32_t)(bit_count - 1u));
+  pio_sm_put_blocking(N64_PIO, N64_SM, packed);
 }
 
 static void n64_handle_command(uint8_t cmd) {
   if (cmd == 0x00u || cmd == 0xFFu) {
-    // Standard controller identity.
-    const uint8_t id[3] = {0x05, 0x00, 0x01};
+#if N64_DIAG_ENABLE
+    const uint8_t id[3] = {0x05, 0x00, 0x02};
     g_dbg_tx_len = 3;
     g_dbg_tx[0] = id[0];
     g_dbg_tx[1] = id[1];
     g_dbg_tx[2] = id[2];
     g_dbg_tx_pending = true;
-    n64_send_bytes(id, 3);
+#endif
+    n64_send_packed(N64_ID_BITCOUNT, N64_ID_PACKED);
     return;
   }
 
   if (cmd == 0x01u) {
+    uint32_t packed;
+#if N64_DIAG_ENABLE
     uint8_t report[4];
-    n64_build_p1_report(report);
+#endif
+    uint32_t ints = save_and_disable_interrupts();
+    packed = g_cached_report_packed;
+#if N64_DIAG_ENABLE
+    report[0] = g_cached_report[0];
+    report[1] = g_cached_report[1];
+    report[2] = g_cached_report[2];
+    report[3] = g_cached_report[3];
+#endif
+    restore_interrupts(ints);
+
+#if N64_DIAG_ENABLE
     g_dbg_tx_len = 4;
     g_dbg_tx[0] = report[0];
     g_dbg_tx[1] = report[1];
     g_dbg_tx[2] = report[2];
     g_dbg_tx[3] = report[3];
     g_dbg_tx_pending = true;
-    n64_send_bytes(report, 4);
+#endif
+    n64_send_packed(N64_REPORT_BITCOUNT, packed);
     return;
   }
 }
 
 bool n64_init(void) {
+#if N64_DIAG_ENABLE
+  gpio_init(N64_DBG_TX_PIN);
+  gpio_set_dir(N64_DBG_TX_PIN, GPIO_OUT);
+  gpio_put(N64_DBG_TX_PIN, 0);
+#endif
+
   gpio_init(N64_P1_DATA_PIN);
   gpio_set_dir(N64_P1_DATA_PIN, GPIO_IN);
   gpio_pull_up(N64_P1_DATA_PIN);
 
-  g_tx_offset = pio_add_program(N64_PIO, &n64_tx_program);
-  g_rx_offset = pio_add_program(N64_PIO, &n64_rx_program);
+  g_io_offset = pio_add_program(N64_PIO, &n64_io_program);
 
-  // TX SM
-  pio_sm_config txc = n64_tx_program_get_default_config(g_tx_offset);
-  sm_config_set_set_pins(&txc, N64_P1_DATA_PIN, 1);
-  sm_config_set_out_shift(&txc, true, false, 32);
-  sm_config_set_fifo_join(&txc, PIO_FIFO_JOIN_TX);
-  sm_config_set_clkdiv(&txc, (float)clock_get_hz(clk_sys) / 1000000.0f);
+  pio_sm_config c = n64_io_program_get_default_config(g_io_offset);
+  sm_config_set_set_pins(&c, N64_P1_DATA_PIN, 1);
+  sm_config_set_in_pins(&c, N64_P1_DATA_PIN);
+  sm_config_set_jmp_pin(&c, N64_P1_DATA_PIN);
+  sm_config_set_out_shift(&c, true, false, 32);
+  sm_config_set_in_shift(&c, false, false, 32);
+  sm_config_set_clkdiv(&c, (float)clock_get_hz(clk_sys) / 1000000.0f);
 
   pio_gpio_init(N64_PIO, N64_P1_DATA_PIN);
-  pio_sm_init(N64_PIO, N64_TX_SM, g_tx_offset, &txc);
-  pio_sm_set_pins_with_mask(N64_PIO, N64_TX_SM, 0u, 1u << N64_P1_DATA_PIN);
-  pio_sm_set_pindirs_with_mask(N64_PIO, N64_TX_SM, 0u, 1u << N64_P1_DATA_PIN);
-  pio_sm_set_enabled(N64_PIO, N64_TX_SM, true);
+  pio_sm_init(N64_PIO, N64_SM, g_io_offset, &c);
+  pio_sm_set_pins_with_mask(N64_PIO, N64_SM, 0u, 1u << N64_P1_DATA_PIN);
+  pio_sm_set_pindirs_with_mask(N64_PIO, N64_SM, 0u, 1u << N64_P1_DATA_PIN);
+  pio_sm_clear_fifos(N64_PIO, N64_SM);
+  pio_sm_restart(N64_PIO, N64_SM);
+  pio_sm_set_enabled(N64_PIO, N64_SM, true);
 
-  // RX SM
-  pio_sm_config rxc = n64_rx_program_get_default_config(g_rx_offset);
-  sm_config_set_in_pins(&rxc, N64_P1_DATA_PIN);
-  sm_config_set_jmp_pin(&rxc, N64_P1_DATA_PIN);
-  sm_config_set_in_shift(&rxc, false, false, 32);
-  sm_config_set_clkdiv(&rxc, (float)clock_get_hz(clk_sys) / 2000000.0f);
+  // Drive RX handling from PIO IRQ for deterministic turnaround.
+  irq_set_exclusive_handler(PIO0_IRQ_0, n64_rx_irq_handler);
+  pio_set_irq0_source_enabled(N64_PIO, pis_sm0_rx_fifo_not_empty, true);
+  irq_set_priority(PIO0_IRQ_0, 0x00);
+  irq_set_enabled(PIO0_IRQ_0, true);
 
-  pio_sm_init(N64_PIO, N64_RX_SM, g_rx_offset, &rxc);
-  pio_sm_clear_fifos(N64_PIO, N64_RX_SM);
-  pio_sm_restart(N64_PIO, N64_RX_SM);
-  pio_sm_set_enabled(N64_PIO, N64_RX_SM, true);
+  n64_refresh_cached_report();
 
   return true;
 }
 
 void n64_task(void) {
   uint32_t now = n64_now_us();
+  n64_refresh_cached_report();
   n64_update_bootsel_test_mode();
-
-  if (g_tx_active && (int32_t)(now - g_tx_done_us) >= 0) {
-    g_tx_active = false;
-    n64_reset_rx_sm(false);
-  }
-
-  // Fallback drain path (if IRQ delivery is delayed/disabled for any reason).
-  while (!g_tx_active && !pio_sm_is_rx_fifo_empty(N64_PIO, N64_RX_SM)) {
-    uint32_t raw = pio_sm_get(N64_PIO, N64_RX_SM);
-    n64_handle_raw_frame((uint16_t)(raw & 0x1FFu), now);
-  }
 
   if (g_last_rx_us != 0u && !g_timeout_latched && (now - g_last_rx_us) > N64_RX_TIMEOUT_US) {
     g_timeout_count++;
@@ -388,12 +430,10 @@ void n64_task(void) {
     }
   }
 
-  if (!g_tx_active) {
-    bool timeout_burst = (g_timeout_count - g_last_recovery_timeout_count) >= N64_RECOVERY_TIMEOUT_BURST;
-    bool frame_burst = (g_frame_err_count - g_last_recovery_frame_count) >= N64_RECOVERY_FRAME_BURST;
-    if (timeout_burst || frame_burst) {
-      n64_reset_rx_sm(true);
-    }
+  bool timeout_burst = (g_timeout_count - g_last_recovery_timeout_count) >= N64_RECOVERY_TIMEOUT_BURST;
+  bool frame_burst = (g_frame_err_count - g_last_recovery_frame_count) >= N64_RECOVERY_FRAME_BURST;
+  if (timeout_burst || frame_burst) {
+    n64_reset_rx_sm(true);
   }
 
   // Temporary heartbeat for field debugging:
@@ -404,7 +444,7 @@ void n64_task(void) {
                  (unsigned long)g_cmd_ok_count,
                  (unsigned long)g_frame_err_count,
                  (unsigned long)g_timeout_count,
-                 g_tx_active ? 1u : 0u);
+                 0u);
   }
 
   if (g_dbg_cmd_pending) {
@@ -458,7 +498,8 @@ void n64_task(void) {
     raw9 = g_dbg_frame_raw;
     g_dbg_frame_pending = false;
     restore_interrupts(ints);
-    N64_DIAG_PRINTF("N64 RX FRAME_ERR raw=0x%03X\n", raw9);
-    N64_DIAG_LOG("N64 RX FRAME_ERR raw=0x%03X cnt=%lu", raw9, (unsigned long)g_frame_err_count);
+    N64_DIAG_PRINTF("N64 RX FRAME_ERR raw=0x%02X\n", (unsigned)(raw9 & 0xFFu));
+    N64_DIAG_LOG("N64 RX FRAME_ERR raw=0x%02X cnt=%lu",
+                 (unsigned)(raw9 & 0xFFu), (unsigned long)g_frame_err_count);
   }
 }
