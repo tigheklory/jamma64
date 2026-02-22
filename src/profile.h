@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   STICK_MODE_DPAD = 0,
   STICK_MODE_ANALOG = 1
@@ -42,3 +46,7 @@ typedef struct {
 } profile_t;
 
 extern volatile profile_t g_profile;
+
+#ifdef __cplusplus
+}
+#endif

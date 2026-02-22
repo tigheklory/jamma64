@@ -14,6 +14,9 @@ option(JAMMA64_ENABLE_WIFI "Enable Wi-Fi/web stack" OFF)
 option(JAMMA64_ENABLE_N64_DIAG "Enable verbose N64 protocol diagnostics" OFF)
 option(JAMMA64_ENABLE_STATUS_PRINTS "Enable 1 Hz status prints" OFF)
 set(JAMMA64_RX_TO_TX_DELAY_US "0" CACHE STRING "N64 RX->TX turnaround delay in microseconds")
+set(JAMMA64_N64_BACKEND "builtin" CACHE STRING "N64 backend: builtin or joybus")
+set_property(CACHE JAMMA64_N64_BACKEND PROPERTY STRINGS builtin joybus)
+set(JAMMA64_JOYBUS_PIO_DIR "${CMAKE_CURRENT_LIST_DIR}/third_party/joybus-pio" CACHE PATH "Path to a local joybus-pio checkout")
 
 if(JAMMA64_ENABLE_WIFI)
   set(JAMMA64_ENABLE_WIFI_DEF 1)
@@ -72,7 +75,6 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
 
 add_executable(jamma64
   src/main.c
-  src/n64.c
   src/web.c
   src/inputs.c
   src/profile.c
@@ -82,7 +84,35 @@ add_executable(jamma64
   src/usb_descriptors.c
 )
 
-pico_generate_pio_header(jamma64 ${CMAKE_CURRENT_LIST_DIR}/src/n64_io.pio)
+if(JAMMA64_N64_BACKEND STREQUAL "builtin")
+  target_sources(jamma64 PRIVATE src/n64.c)
+  pico_generate_pio_header(jamma64 ${CMAKE_CURRENT_LIST_DIR}/src/n64_io.pio)
+  target_compile_definitions(jamma64 PRIVATE JAMMA64_N64_BACKEND_BUILTIN=1)
+elseif(JAMMA64_N64_BACKEND STREQUAL "joybus")
+  if(NOT EXISTS "${JAMMA64_JOYBUS_PIO_DIR}")
+    message(FATAL_ERROR "JAMMA64_N64_BACKEND=joybus but JAMMA64_JOYBUS_PIO_DIR does not exist: ${JAMMA64_JOYBUS_PIO_DIR}")
+  endif()
+  if(NOT EXISTS "${JAMMA64_JOYBUS_PIO_DIR}/include/N64Console.hpp")
+    message(FATAL_ERROR "Expected joybus-pio header not found: ${JAMMA64_JOYBUS_PIO_DIR}/include/N64Console.hpp")
+  endif()
+  if(NOT EXISTS "${JAMMA64_JOYBUS_PIO_DIR}/src/joybus.c")
+    message(FATAL_ERROR "Expected joybus-pio source not found: ${JAMMA64_JOYBUS_PIO_DIR}/src/joybus.c")
+  endif()
+  if(NOT EXISTS "${JAMMA64_JOYBUS_PIO_DIR}/src/N64Console.cpp")
+    message(FATAL_ERROR "Expected joybus-pio source not found: ${JAMMA64_JOYBUS_PIO_DIR}/src/N64Console.cpp")
+  endif()
+  pico_generate_pio_header(jamma64 ${JAMMA64_JOYBUS_PIO_DIR}/src/joybus.pio)
+  target_sources(jamma64 PRIVATE
+    src/n64_joybus.cpp
+    ${JAMMA64_JOYBUS_PIO_DIR}/src/joybus.c
+    ${JAMMA64_JOYBUS_PIO_DIR}/src/N64Console.cpp
+  )
+  target_include_directories(jamma64 PRIVATE "${JAMMA64_JOYBUS_PIO_DIR}/include")
+  target_link_libraries(jamma64 hardware_pio)
+  target_compile_definitions(jamma64 PRIVATE JAMMA64_N64_BACKEND_JOYBUS=1)
+else()
+  message(FATAL_ERROR "Invalid JAMMA64_N64_BACKEND='${JAMMA64_N64_BACKEND}'. Use builtin or joybus.")
+endif()
 
 target_compile_definitions(jamma64 PRIVATE
   CFG_TUSB_CONFIG_FILE=\"tusb_config.h\"
