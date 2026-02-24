@@ -3,17 +3,23 @@
 #include <cstring>
 
 #include "hardware/pio.h"
+#include "pico/time.h"
 
 #include "inputs.h"
 #include "profile.h"
 
-#include "N64Console.hpp"
+#include "joybus.h"
+#include "n64_definitions.h"
 
 namespace {
 
 constexpr uint kN64DataPin = 2;
+constexpr uint64_t kReplyDelayUs = 4;
+constexpr uint64_t kRxTimeoutUs = 50;
+constexpr uint64_t kResetWaitUs = 50;
 
-N64Console *g_console = nullptr;
+joybus_port_t g_port{};
+bool g_port_ready = false;
 
 static inline uint8_t clamp_analog(bool neg, bool pos, uint8_t mag) {
   if (neg && !pos) return static_cast<uint8_t>(256u - mag);
@@ -69,20 +75,40 @@ static void build_report(n64_report_t *report) {
 }  // namespace
 
 bool n64_init(void) {
-  if (!g_console) {
-    g_console = new N64Console(kN64DataPin, pio0);
+  if (!g_port_ready) {
+    joybus_port_init(&g_port, kN64DataPin, pio0, -1, -1);
+    g_port_ready = true;
   }
-  return g_console->Detect();
+  return true;
 }
 
 void n64_task(void) {
-  if (!g_console) return;
-  // Wait for the next host poll and reply immediately using the current input state.
-  // Note: WaitForPoll blocks; this backend is best run on a dedicated core.
-  bool rumble = g_console->WaitForPoll();
-  (void)rumble;
+  if (!g_port_ready) return;
 
-  n64_report_t report{};
-  build_report(&report);
-  g_console->SendReport(&report);
+  uint8_t cmd = 0;
+  // First byte timeout enabled so this function stays non-blocking and USB can be serviced.
+  if (joybus_receive_bytes(&g_port, &cmd, 1, kRxTimeoutUs, true) != 1) {
+    return;
+  }
+
+  switch ((N64Command)cmd) {
+    case N64Command::RESET:
+    case N64Command::PROBE: {
+      busy_wait_us(kReplyDelayUs);
+      n64_status_t status = default_n64_status;
+      joybus_send_bytes(&g_port, reinterpret_cast<uint8_t *>(&status), sizeof(status));
+      break;
+    }
+    case N64Command::POLL: {
+      busy_wait_us(kReplyDelayUs);
+      n64_report_t report{};
+      build_report(&report);
+      joybus_send_bytes(&g_port, reinterpret_cast<uint8_t *>(&report), sizeof(report));
+      break;
+    }
+    default:
+      busy_wait_us(kResetWaitUs);
+      joybus_port_reset(&g_port);
+      break;
+  }
 }

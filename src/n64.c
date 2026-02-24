@@ -51,7 +51,6 @@
 #define N64_ID_BITCOUNT 24u
 #define N64_REPORT_BITCOUNT 32u
 #define N64_ID_PACKED 0x004000A0u
-#define N64_BUTTON_HOLD_US 120000u
 
 static uint g_io_offset;
 
@@ -77,8 +76,6 @@ static bool g_bootsel_last;
 static uint32_t g_bootsel_last_change_us;
 static uint8_t g_test_step;
 static bool g_test_mode_active;
-static uint32_t g_start_hold_until_us;
-static uint32_t g_z_hold_until_us;
 static volatile uint32_t g_cached_report_packed;
 static volatile uint8_t g_cached_report[4];
 
@@ -245,18 +242,12 @@ static void n64_apply_bootsel_test_override(uint8_t out[4]) {
 
 static void n64_build_p1_report(uint8_t out[4]) {
   inputs_t in = inputs_read();
-  uint32_t now = n64_now_us();
 
   uint8_t b0 = 0;
   if (n64_map_pressed(in, N64_A))     b0 |= 0x80;
   if (n64_map_pressed(in, N64_B))     b0 |= 0x40;
-
-  bool z_pressed = n64_map_pressed(in, N64_Z);
-  bool start_pressed = n64_map_pressed(in, N64_START);
-  if (z_pressed) g_z_hold_until_us = now + N64_BUTTON_HOLD_US;
-  if (start_pressed) g_start_hold_until_us = now + N64_BUTTON_HOLD_US;
-  if (z_pressed || (int32_t)(g_z_hold_until_us - now) > 0) b0 |= 0x20;
-  if (start_pressed || (int32_t)(g_start_hold_until_us - now) > 0) b0 |= 0x10;
+  if (n64_map_pressed(in, N64_Z))     b0 |= 0x20;
+  if (n64_map_pressed(in, N64_START)) b0 |= 0x10;
 
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
     if (n64_map_pressed(in, N64_DU)) b0 |= 0x08;
