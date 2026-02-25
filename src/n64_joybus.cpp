@@ -7,6 +7,7 @@
 
 #include "inputs.h"
 #include "profile.h"
+#include "n64_virtual.h"
 
 #include "joybus.h"
 #include "n64_definitions.h"
@@ -33,36 +34,40 @@ static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
   return inputs_get(in, static_cast<phys_in_t>(phys));
 }
 
+static inline bool n64_out_pressed(inputs_t in, n64_out_t out) {
+  return n64_map_pressed(in, out) || n64_virtual_pressed(out);
+}
+
 static void build_report(n64_report_t *report) {
   std::memset(report, 0, sizeof(*report));
 
   inputs_t in = inputs_read();
 
-  report->a = n64_map_pressed(in, N64_A);
-  report->b = n64_map_pressed(in, N64_B);
-  report->z = n64_map_pressed(in, N64_Z);
-  report->start = n64_map_pressed(in, N64_START);
+  report->a = n64_out_pressed(in, N64_A);
+  report->b = n64_out_pressed(in, N64_B);
+  report->z = n64_out_pressed(in, N64_Z);
+  report->start = n64_out_pressed(in, N64_START);
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
-    report->dpad_up = n64_map_pressed(in, N64_DU);
-    report->dpad_down = n64_map_pressed(in, N64_DD);
-    report->dpad_left = n64_map_pressed(in, N64_DL);
-    report->dpad_right = n64_map_pressed(in, N64_DR);
+    report->dpad_up = n64_out_pressed(in, N64_DU);
+    report->dpad_down = n64_out_pressed(in, N64_DD);
+    report->dpad_left = n64_out_pressed(in, N64_DL);
+    report->dpad_right = n64_out_pressed(in, N64_DR);
   }
 
-  report->l = n64_map_pressed(in, N64_L);
-  report->r = n64_map_pressed(in, N64_R);
-  report->c_up = n64_map_pressed(in, N64_CU);
-  report->c_down = n64_map_pressed(in, N64_CD);
-  report->c_left = n64_map_pressed(in, N64_CL);
-  report->c_right = n64_map_pressed(in, N64_CR);
+  report->l = n64_out_pressed(in, N64_L);
+  report->r = n64_out_pressed(in, N64_R);
+  report->c_up = n64_out_pressed(in, N64_CU);
+  report->c_down = n64_out_pressed(in, N64_CD);
+  report->c_left = n64_out_pressed(in, N64_CL);
+  report->c_right = n64_out_pressed(in, N64_CR);
 
   uint8_t sx = 0;
   uint8_t sy = 0;
   if (g_profile.p1_stick_mode == STICK_MODE_ANALOG) {
-    bool su = n64_map_pressed(in, N64_DU);
-    bool sd = n64_map_pressed(in, N64_DD);
-    bool sl = n64_map_pressed(in, N64_DL);
-    bool sr = n64_map_pressed(in, N64_DR);
+    bool su = n64_out_pressed(in, N64_DU) || n64_virtual_analog_pressed(N64_VANALOG_UP);
+    bool sd = n64_out_pressed(in, N64_DD) || n64_virtual_analog_pressed(N64_VANALOG_DOWN);
+    bool sl = n64_out_pressed(in, N64_DL) || n64_virtual_analog_pressed(N64_VANALOG_LEFT);
+    bool sr = n64_out_pressed(in, N64_DR) || n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
     uint8_t mag = g_profile.analog_throw;
     sx = clamp_analog(sl, sr, mag);
     sy = clamp_analog(sd, su, mag);

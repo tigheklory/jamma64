@@ -1,5 +1,18 @@
 <html>
-<head><title>JAMMA64</title></head>
+<head>
+  <title>JAMMA64</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; max-width: 920px; margin: 1rem auto; padding: 0 0.8rem; }
+    .panel { border: 1px solid #ccc; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; }
+    .row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    #press_ms { width: 280px; }
+    #controller_wrap { width: 100%; max-width: 760px; }
+    #controller_svg { width: 100%; height: auto; min-height: 320px; border: 1px solid #ddd; border-radius: 8px; }
+    #press_status { color: #444; min-height: 1.2rem; }
+    ul { margin-top: 0.4rem; }
+  </style>
+</head>
 <body>
 <h2>JAMMA64 Controller</h2>
 
@@ -19,5 +32,105 @@
   <li><a href="/mode.cgi?throw=127">throw=127</a></li>
 </ul>
 
+<div class="panel">
+  <h3>Clickable Controller</h3>
+  <div class="row">
+    <label for="press_ms">Press duration (ms):</label>
+    <input id="press_ms" type="range" min="20" max="300" step="10" value="80" />
+    <strong id="press_ms_value">80</strong>
+  </div>
+  <p id="press_status">Loading controller overlay...</p>
+  <div id="controller_wrap">
+    <object id="controller_svg" type="image/svg+xml" data="/img/controller_clickable_jamma64_v6.svgz">
+      Controller SVG failed to load.
+    </object>
+  </div>
+</div>
+
+<p>Virtual button press links:</p>
+<ul>
+  <li><a href="/press.cgi?btn=start&ms=80">Press START</a></li>
+  <li><a href="/press.cgi?btn=z&ms=80">Press Z</a></li>
+  <li><a href="/press.cgi?btn=a&ms=80">Press A</a></li>
+  <li><a href="/press.cgi?btn=b&ms=80">Press B</a></li>
+  <li><a href="/press.cgi?btn=l&ms=80">Press L</a></li>
+  <li><a href="/press.cgi?btn=r&ms=80">Press R</a></li>
+  <li><a href="/press.cgi?btn=cu&ms=80">Press C-Up</a></li>
+  <li><a href="/press.cgi?btn=cd&ms=80">Press C-Down</a></li>
+  <li><a href="/press.cgi?btn=cl&ms=80">Press C-Left</a></li>
+  <li><a href="/press.cgi?btn=cr&ms=80">Press C-Right</a></li>
+  <li><a href="/press.cgi?btn=du&ms=80">Press D-Up</a></li>
+  <li><a href="/press.cgi?btn=dd&ms=80">Press D-Down</a></li>
+  <li><a href="/press.cgi?btn=dl&ms=80">Press D-Left</a></li>
+  <li><a href="/press.cgi?btn=dr&ms=80">Press D-Right</a></li>
+</ul>
+
+<p>Virtual analog stick press (max throw, 80ms):</p>
+<ul>
+  <li><a href="/press.cgi?btn=au&ms=80">Analog Up (max)</a></li>
+  <li><a href="/press.cgi?btn=ad&ms=80">Analog Down (max)</a></li>
+  <li><a href="/press.cgi?btn=al&ms=80">Analog Left (max)</a></li>
+  <li><a href="/press.cgi?btn=ar&ms=80">Analog Right (max)</a></li>
+</ul>
+
+<script>
+  (function () {
+    function $(id) { return document.getElementById(id); }
+
+    var slider = $("press_ms");
+    var sliderValue = $("press_ms_value");
+    var statusEl = $("press_status");
+    var svgObj = $("controller_svg");
+
+    function currentMs() {
+      var v = parseInt(slider.value, 10);
+      if (!Number.isFinite(v) || v < 1) return 80;
+      return v;
+    }
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function pressBtn(btn) {
+      var ms = currentMs();
+      var url = "/press.cgi?btn=" + encodeURIComponent(btn) + "&ms=" + encodeURIComponent(ms);
+      setStatus("Sent " + btn.toUpperCase() + " for " + ms + "ms");
+      fetch(url, { method: "GET", cache: "no-store" }).catch(function () {
+        setStatus("Failed to send " + btn.toUpperCase());
+      });
+    }
+
+    slider.addEventListener("input", function () {
+      sliderValue.textContent = String(currentMs());
+    });
+    sliderValue.textContent = String(currentMs());
+
+    function wireSvg() {
+      var svgDoc = svgObj.contentDocument;
+      if (!svgDoc) {
+        setStatus("Could not access SVG content");
+        return;
+      }
+      var hitAreas = svgDoc.querySelectorAll("[data-btn]");
+      if (!hitAreas || !hitAreas.length) {
+        setStatus("No clickable hit areas found");
+        return;
+      }
+      hitAreas.forEach(function (el) {
+        var btn = el.getAttribute("data-btn");
+        if (!btn) return;
+        el.style.cursor = "pointer";
+        el.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          pressBtn(btn);
+        });
+      });
+      setStatus("Controller loaded. Tap a control to send a virtual press.");
+    }
+
+    svgObj.addEventListener("load", wireSvg);
+  })();
+</script>
 </body>
 </html>

@@ -10,7 +10,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 # Build toggles for timing-focused validation.
-option(JAMMA64_ENABLE_WIFI "Enable Wi-Fi/web stack" OFF)
+option(JAMMA64_ENABLE_WIFI "Enable Wi-Fi/web stack" ON)
 option(JAMMA64_ENABLE_N64_DIAG "Enable verbose N64 protocol diagnostics" OFF)
 option(JAMMA64_ENABLE_STATUS_PRINTS "Enable 1 Hz status prints" OFF)
 set(JAMMA64_RX_TO_TX_DELAY_US "0" CACHE STRING "N64 RX->TX turnaround delay in microseconds")
@@ -71,6 +71,7 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/content/ledpass.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/ledfail.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/controller_clickable_jamma64_v6.svgz
 )
 
 add_executable(jamma64
@@ -80,6 +81,7 @@ add_executable(jamma64
   src/profile.c
   src/event_log.c
   src/wifi_config.c
+  src/n64_virtual.c
   src/usb_msc.c
   src/usb_descriptors.c
 )

@@ -17,6 +17,7 @@
 #include "wifi_config.h"
 #include "usb_msc.h"
 #include "event_log.h"
+#include "n64_virtual.h"
 
 #ifndef JAMMA64_FW_VERSION
 #define JAMMA64_FW_VERSION "dev"
@@ -32,6 +33,7 @@
 
 #define WIFI_STACK_INIT_DELAY_MS 2500u
 #define WIFI_STACK_INIT_RETRY_MS 5000u
+#define N64_BOOT_PRIORITY_MS 800u
 
 #if JAMMA64_ENABLE_WIFI
 // Helper to print IP once connected
@@ -78,14 +80,21 @@ static bool connect_wifi_if_configured(uint32_t timeout_ms) {
 
 int main() {
   stdio_init_all();
-  // Start protocol handling quickly so the console sees us during its initial probe.
-  sleep_ms(20);
   printf("\nJAMMA64 starting (fw=%s)\n", JAMMA64_FW_VERSION);
 
   event_log_init();
   event_log_appendf("BOOT JAMMA64 fw=%s", JAMMA64_FW_VERSION);
   inputs_init();
+  n64_virtual_clear();
   n64_init();
+
+  // Prioritize N64 servicing immediately at boot so early console probe traffic
+  // (e.g. SM64 startup) is handled before slower subsystem init.
+  absolute_time_t n64_boot_priority_until = make_timeout_time_ms(N64_BOOT_PRIORITY_MS);
+  while (absolute_time_diff_us(get_absolute_time(), n64_boot_priority_until) < 0) {
+    n64_task();
+    tight_loop_contents();
+  }
 
   // Start USB (Drive + Serial)
   usb_msc_init();
