@@ -2,6 +2,7 @@
 
 volatile profile_t g_profile = {
   .map = {
+    [0 ... (N64_OUTPUT_COUNT - 1)] = 0xFF,
     [N64_A] = IN_P1_B1,
     [N64_B] = IN_P1_B2,
     [N64_Z] = IN_P1_B3,
@@ -9,9 +10,6 @@ volatile profile_t g_profile = {
     [N64_L] = IN_P1_B5,
     [N64_R] = IN_P1_B6,
     [N64_CU] = IN_P1_B4,   // placeholder defaults; change later
-    [N64_CD] = 0xFF,
-    [N64_CL] = 0xFF,
-    [N64_CR] = 0xFF,
 
     // DPAD defaults to joystick switches
     [N64_DU] = IN_P1_UP,

@@ -17,6 +17,7 @@ typedef enum {
   N64_L, N64_R,
   N64_CU, N64_CD, N64_CL, N64_CR,
   N64_DU, N64_DD, N64_DL, N64_DR,
+  N64_AU, N64_AD, N64_AL, N64_AR,
   N64_OUTPUT_COUNT
 } n64_out_t;
 

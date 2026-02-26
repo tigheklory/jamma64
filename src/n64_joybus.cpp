@@ -38,6 +38,17 @@ static inline bool n64_out_pressed(inputs_t in, n64_out_t out) {
   return n64_map_pressed(in, out) || n64_virtual_pressed(out);
 }
 
+static inline bool is_p1_joystick_phys(uint8_t phys) {
+  return phys == IN_P1_UP || phys == IN_P1_DOWN || phys == IN_P1_LEFT || phys == IN_P1_RIGHT;
+}
+
+static inline bool n64_dir_pressed_nonjoy(inputs_t in, n64_out_t out) {
+  uint8_t phys = g_profile.map[out];
+  if (phys == 0xFFu || phys >= IN_COUNT) return false;
+  if (is_p1_joystick_phys(phys)) return false;
+  return inputs_get(in, static_cast<phys_in_t>(phys));
+}
+
 static void build_report(n64_report_t *report) {
   std::memset(report, 0, sizeof(*report));
 
@@ -53,18 +64,15 @@ static void build_report(n64_report_t *report) {
   bool vdl = n64_virtual_dpad_pressed(N64_VDPAD_LEFT);
   bool vdr = n64_virtual_dpad_pressed(N64_VDPAD_RIGHT);
 
-  if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
-    report->dpad_up = n64_out_pressed(in, N64_DU) || vdu;
-    report->dpad_down = n64_out_pressed(in, N64_DD) || vdd;
-    report->dpad_left = n64_out_pressed(in, N64_DL) || vdl;
-    report->dpad_right = n64_out_pressed(in, N64_DR) || vdr;
-  } else {
-    // Web virtual d-pad is always routed to N64 d-pad bits.
-    report->dpad_up = vdu;
-    report->dpad_down = vdd;
-    report->dpad_left = vdl;
-    report->dpad_right = vdr;
-  }
+  bool joy_up = inputs_get(in, IN_P1_UP);
+  bool joy_down = inputs_get(in, IN_P1_DOWN);
+  bool joy_left = inputs_get(in, IN_P1_LEFT);
+  bool joy_right = inputs_get(in, IN_P1_RIGHT);
+
+  report->dpad_up = n64_dir_pressed_nonjoy(in, N64_DU) || vdu;
+  report->dpad_down = n64_dir_pressed_nonjoy(in, N64_DD) || vdd;
+  report->dpad_left = n64_dir_pressed_nonjoy(in, N64_DL) || vdl;
+  report->dpad_right = n64_dir_pressed_nonjoy(in, N64_DR) || vdr;
 
   report->l = n64_out_pressed(in, N64_L);
   report->r = n64_out_pressed(in, N64_R);
@@ -79,11 +87,21 @@ static void build_report(n64_report_t *report) {
   bool sd = n64_virtual_analog_pressed(N64_VANALOG_DOWN);
   bool sl = n64_virtual_analog_pressed(N64_VANALOG_LEFT);
   bool sr = n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
-  if (g_profile.p1_stick_mode == STICK_MODE_ANALOG) {
-    su = su || n64_out_pressed(in, N64_DU);
-    sd = sd || n64_out_pressed(in, N64_DD);
-    sl = sl || n64_out_pressed(in, N64_DL);
-    sr = sr || n64_out_pressed(in, N64_DR);
+  su = su || n64_dir_pressed_nonjoy(in, N64_AU);
+  sd = sd || n64_dir_pressed_nonjoy(in, N64_AD);
+  sl = sl || n64_dir_pressed_nonjoy(in, N64_AL);
+  sr = sr || n64_dir_pressed_nonjoy(in, N64_AR);
+
+  if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
+    report->dpad_up = report->dpad_up || joy_up;
+    report->dpad_down = report->dpad_down || joy_down;
+    report->dpad_left = report->dpad_left || joy_left;
+    report->dpad_right = report->dpad_right || joy_right;
+  } else {
+    su = su || joy_up;
+    sd = sd || joy_down;
+    sl = sl || joy_left;
+    sr = sr || joy_right;
   }
   uint8_t mag = g_profile.analog_throw;
   sx = clamp_analog(sl, sr, mag);

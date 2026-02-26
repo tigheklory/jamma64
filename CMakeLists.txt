@@ -78,6 +78,8 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/content/ledpass.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/ledfail.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svg
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svgz
   ${CMAKE_CURRENT_LIST_DIR}/content/img/controller_clickable_jamma64_v8.svgz
 )
 
@@ -86,6 +88,7 @@ add_executable(jamma64
   src/web.c
   src/inputs.c
   src/profile.c
+  src/mapping_store.c
   src/wifi_config.c
   src/n64_virtual.c
   src/usb_msc.c

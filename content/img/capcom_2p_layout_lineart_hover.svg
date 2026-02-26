@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" width="100%" viewBox="2.000 -0.400 24.320 8.236" preserveAspectRatio="xMidYMid meet" version="1.1" id="svg49" sodipodi:docname="capcom_2p_layout_lineart_v2_edited.svg" inkscape:version="1.4.3 (0d15f75, 2025-12-25)">
+  <defs id="defs49" />
+  <sodipodi:namedview id="namedview49" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.25" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1" showguides="true" inkscape:zoom="70.847498" inkscape:cx="8.6029855" inkscape:cy="6.711599" inkscape:window-width="1704" inkscape:window-height="1313" inkscape:window-x="1693" inkscape:window-y="41" inkscape:window-maximized="0" inkscape:current-layer="svg49">
+    <sodipodi:guide position="10.180302,2.8863512" orientation="1,0" id="guide49" inkscape:locked="false" />
+    <sodipodi:guide position="23.148312,-1.9266735" orientation="1,0" id="guide50" inkscape:locked="false" />
+    <sodipodi:guide position="21.518364,1.5289777" orientation="1,0" id="guide51" inkscape:locked="false" />
+    <sodipodi:guide position="8.528498,3.1907622" orientation="1,0" id="guide52" inkscape:locked="false" />
+    <sodipodi:guide position="16.627263,2.7594482" orientation="0,-1" id="guide53" inkscape:locked="false" />
+    <sodipodi:guide position="0.69864817,5.1220253" orientation="1,0" id="guide54" inkscape:locked="false" />
+    <sodipodi:guide position="8.7630442,7.0183561" orientation="0,-1" id="guide55" inkscape:locked="false" />
+  </sodipodi:namedview>
+  <style id="style1">
+    .outline{fill:none;stroke:#000;stroke-width:0.06}
+    .hole{fill:none;stroke:#000;stroke-width:0.04;stroke-dasharray:0.15 0.15}
+    .bezel{fill:transparent;stroke:#000;stroke-width:0.06}
+    .cap{fill:transparent;stroke:#000;stroke-width:0.04}
+    .label{font-family:Arial, Helvetica, sans-serif;font-size:0.55px;fill:#000;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+    .title{font-family:Arial, Helvetica, sans-serif;font-size:0.6px;fill:#000;text-anchor:middle}
+
+    g[data-map]{cursor:pointer}
+    g[data-map]:hover .bezel{fill:#a78bfa;fill-opacity:0.22}
+    g[data-map]:hover .cap{fill:#a78bfa;fill-opacity:0.14}
+    g[data-map]:active .bezel{fill:#a78bfa;fill-opacity:0.32}
+    g[data-map]:active .cap{fill:#a78bfa;fill-opacity:0.22}
+
+</style>
+  <rect x="2" y="-0.40000001" width="24.32" height="8.2360001" fill="#ffffff" id="rect1" style="display:inline" />
+  <g id="player1">
+    <text class="title" x="4" y="0.40000001" id="text1">PLAYER 1</text>
+    <g id="p1-joy" data-map="p1-joy" transform="translate(0,0.0998069)">
+      <circle class="bezel" cx="4" cy="5" r="1.25" id="circle2" style="display:inline" />
+      <circle class="cap" cx="4" cy="5" r="0.55000001" id="circle3" />
+    </g>
+    <g id="p1-lk" data-map="P1_LK" transform="translate(0,0.0998069)">
+      <circle class="bezel" cx="8.0600004" cy="5.836" r="0.75" id="circle14" />
+      <circle class="cap" cx="8.0600004" cy="5.836" r="0.55000001" id="circle15" />
+      <text class="label" x="8.0600004" y="5.836" id="text15">X</text>
+    </g>
+    <g id="p1-mk" data-map="P1_MK" transform="translate(0.04990345,0.0998069)">
+      <circle class="bezel" cx="9.6949997" cy="5.835" r="0.75" id="circle17" />
+      <circle class="cap" cx="9.6949997" cy="5.835" r="0.55000001" id="circle18" />
+      <text class="label" x="9.6949997" y="5.835" id="text18">X</text>
+    </g>
+    <g id="p1-hk" data-map="P1_HK" transform="translate(0.09980695,0.0998069)">
+      <circle class="bezel" cx="11.32" cy="5.835" r="0.75" id="circle20" />
+      <circle class="cap" cx="11.32" cy="5.835" r="0.55000001" id="circle21" />
+      <text class="label" x="11.32" y="5.835" id="text21">X</text>
+    </g>
+    <g id="p1-lp" data-map="P1_LP" transform="translate(0,-0.0998069)">
+      <circle class="bezel" cx="8.0600004" cy="4.3369999" r="0.75" id="circle5" style="display:inline" />
+      <circle class="cap" cx="8.0600004" cy="4.3369999" r="0.55000001" id="circle6" style="display:inline" />
+      <text class="label" x="8.0600004" y="4.3369999" id="text6">X</text>
+    </g>
+    <g id="p1-mp" data-map="P1_MP" transform="translate(0.04990345,-0.0998069)">
+      <circle class="bezel" cx="9.6969995" cy="4.3379998" r="0.75" id="circle8" />
+      <circle class="cap" cx="9.6969995" cy="4.3379998" r="0.55000001" id="circle9" />
+      <text class="label" x="9.6969995" y="4.3379998" id="text9">X</text>
+    </g>
+    <g id="p1-hp" data-map="P1_HP" transform="translate(0.09980695,-0.0998069)">
+      <circle class="bezel" cx="11.32" cy="4.336" r="0.75" id="circle11" />
+      <circle class="cap" cx="11.32" cy="4.336" r="0.55000001" id="circle12" />
+      <text class="label" x="11.32" y="4.336" id="text12">X</text>
+    </g>
+  </g>
+  <g id="player2">
+    <text class="title" x="17" y="0.40000001" id="text22">PLAYER 2</text>
+    <g id="p2-joy" data-map="p2-joy">
+      <circle class="bezel" cx="17" cy="5" r="1.25" id="circle23" style="display:inline" />
+      <circle class="cap" cx="17.000" cy="5.000" r="0.550" id="circle24" />
+    </g>
+    <g id="p2-lp" data-map="P2_LP" transform="translate(0,-0.0998069)">
+      <circle class="bezel" cx="21.059999" cy="4.3369999" r="0.75" id="circle26" />
+      <circle class="cap" cx="21.059999" cy="4.3369999" r="0.55000001" id="circle27" />
+      <text class="label" x="21.059999" y="4.3369999" id="text27">X</text>
+    </g>
+    <g id="p2-mp" data-map="P2_MP" transform="translate(0.04990345,-0.0998069)">
+      <circle class="bezel" cx="22.697001" cy="4.3379998" r="0.75" id="circle29" />
+      <circle class="cap" cx="22.697001" cy="4.3379998" r="0.55000001" id="circle30" />
+      <text class="label" x="22.697001" y="4.3379998" id="text30">X</text>
+    </g>
+    <g id="p2-hp" data-map="P2_HP" transform="translate(0.0998069,-0.0998069)">
+      <circle class="bezel" cx="24.32" cy="4.336" r="0.75" id="circle32" />
+      <circle class="cap" cx="24.32" cy="4.336" r="0.55000001" id="circle33" />
+      <text class="label" x="24.32" y="4.336" id="text33">X</text>
+    </g>
+    <g id="p2-lk" data-map="P2_LK" transform="translate(0,0.0998069)">
+      <circle class="bezel" cx="21.059999" cy="5.836" r="0.75" id="circle35" />
+      <circle class="cap" cx="21.059999" cy="5.836" r="0.55000001" id="circle36" />
+      <text class="label" x="21.059999" y="5.836" id="text36">X</text>
+    </g>
+    <g id="p2-mk" data-map="P2_MK" transform="translate(0.04990345,0.0998069)">
+      <circle class="bezel" cx="22.695" cy="5.835" r="0.75" id="circle38" />
+      <circle class="cap" cx="22.695" cy="5.835" r="0.55000001" id="circle39" />
+      <text class="label" x="22.695" y="5.835" id="text39">X</text>
+    </g>
+    <g id="p2-hk" data-map="P2_HK" transform="translate(0.0998069,0.0998069)">
+      <circle class="bezel" cx="24.32" cy="5.835" r="0.75" id="circle41" />
+      <circle class="cap" cx="24.32" cy="5.835" r="0.55000001" id="circle42" />
+      <text class="label" x="24.32" y="5.835" id="text42">X</text>
+    </g>
+  </g>
+  <g id="start-buttons">
+    <g id="p1-start" data-map="P1_START" transform="translate(0.2495172)">
+      <circle class="bezel" cx="9.5" cy="1.6" r="0.75" id="circle44" />
+      <circle class="cap" cx="9.5" cy="1.6" r="0.55000001" id="circle45" />
+      <text class="label" x="9.5" y="1.6" id="text45">X</text>
+    </g>
+    <g id="p2-start" data-map="P2_START" transform="translate(11.242106)">
+      <circle class="bezel" cx="11.5" cy="1.6" r="0.75" id="circle47" />
+      <circle class="cap" cx="11.5" cy="1.6" r="0.55000001" id="circle48" />
+      <text class="label" x="11.5" y="1.6" id="text48">X</text>
+    </g>
+  </g>
+</svg>

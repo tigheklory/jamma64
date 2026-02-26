@@ -3,6 +3,7 @@
 
 // Call once at startup
 void usb_msc_init(void);
+void usb_msc_refresh_files(void);
 
 // Called when wifi.txt is written to the drive
 // Returns true if it saved creds and requested reboot

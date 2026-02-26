@@ -1,5 +1,6 @@
 #include "usb_msc.h"
 #include "wifi_config.h"
+#include "mapping_store.h"
 
 #include "pico/stdlib.h"
 #include "tusb.h"
@@ -34,6 +35,7 @@
 #define DATA_START_LBA (ROOT_START_LBA + ROOT_DIR_SECTORS)
 
 #define WIFI_FILE_CLUSTER 2u
+#define MAPS_FILE_CLUSTER 3u
 
 static uint8_t disk[SECTOR_SIZE * SECTOR_COUNT];
 
@@ -49,6 +51,32 @@ static const char k_wifi_template[] =
   "SSID=\r\n"
   "PASSWORD=\r\n"
   "# Optional: REBOOT=1\r\n";
+
+static uint32_t build_wifi_file_contents(char *out, uint32_t out_max) {
+  if (!out || out_max == 0u) return 0u;
+
+  wifi_creds_t creds;
+  if (wifi_config_load(&creds) && creds.valid) {
+    int n = snprintf(
+      out,
+      out_max,
+      "# JAMMA64 Wi-Fi config\r\n"
+      "# Edit values and save this file.\r\n"
+      "SSID=%s\r\n"
+      "PASSWORD=%s\r\n"
+      "# Optional: REBOOT=1\r\n",
+      creds.ssid,
+      creds.password
+    );
+    if (n > 0 && (uint32_t)n < out_max) return (uint32_t)n;
+  }
+
+  size_t tlen = strlen(k_wifi_template);
+  if (tlen >= out_max) tlen = out_max - 1u;
+  memcpy(out, k_wifi_template, tlen);
+  out[tlen] = '\0';
+  return (uint32_t)tlen;
+}
 
 static inline uint8_t *lba_ptr(uint32_t lba) {
   return &disk[lba * SECTOR_SIZE];
@@ -112,6 +140,15 @@ static uint32_t cluster_to_lba(uint16_t cluster) {
 
 static void usb_msc_build_fat_image(void) {
   memset(disk, 0, sizeof(disk));
+  char wifi_file[SECTOR_SIZE];
+  char maps_file[SECTOR_SIZE];
+  uint32_t wifi_len = build_wifi_file_contents(wifi_file, sizeof(wifi_file));
+  uint32_t maps_len = (uint32_t)mapping_store_export_json(maps_file, sizeof(maps_file));
+  if (maps_len == 0u) {
+    static const char k_empty_json[] = "{\"version\":1,\"active\":\"\",\"profiles\":[]}\r\n";
+    maps_len = (uint32_t)strlen(k_empty_json);
+    memcpy(maps_file, k_empty_json, maps_len);
+  }
 
   // Boot sector
   uint8_t *bs = lba_ptr(0);
@@ -137,11 +174,12 @@ static void usb_msc_build_fat_image(void) {
   bs[510] = 0x55;
   bs[511] = 0xAA;
 
-  // FAT1/FAT2: media + reserved clusters, cluster 2 used by WIFI.TXT
+  // FAT1/FAT2: media + reserved clusters
   uint8_t *fat1 = lba_ptr(FAT1_START_LBA);
   fat1[0] = 0xF8; fat1[1] = 0xFF; fat1[2] = 0xFF;
   memcpy(lba_ptr(FAT2_START_LBA), fat1, SECTOR_SIZE);
   fat12_set(WIFI_FILE_CLUSTER, 0x0FFFu);
+  fat12_set(MAPS_FILE_CLUSTER, 0x0FFFu);
 
   // Root directory
   uint8_t *root = lba_ptr(ROOT_START_LBA);
@@ -154,11 +192,20 @@ static void usb_msc_build_fat_image(void) {
   memcpy(&wf[0], "WIFI    TXT", 11);
   wf[11] = 0x20;  // archive
   write_le16(&wf[26], WIFI_FILE_CLUSTER);
-  write_le32(&wf[28], (uint32_t)strlen(k_wifi_template));
+  write_le32(&wf[28], wifi_len);
+
+  // MAPS.JSN entry (JSON export of saved named mappings)
+  uint8_t *mf = &root[64];
+  memcpy(&mf[0], "MAPS    JSN", 11);
+  mf[11] = 0x20;  // archive
+  write_le16(&mf[26], MAPS_FILE_CLUSTER);
+  write_le32(&mf[28], maps_len);
 
   // File data
-  uint8_t *data = lba_ptr(cluster_to_lba(WIFI_FILE_CLUSTER));
-  memcpy(data, k_wifi_template, strlen(k_wifi_template));
+  uint8_t *wifi_data = lba_ptr(cluster_to_lba(WIFI_FILE_CLUSTER));
+  memcpy(wifi_data, wifi_file, wifi_len);
+  uint8_t *maps_data = lba_ptr(cluster_to_lba(MAPS_FILE_CLUSTER));
+  memcpy(maps_data, maps_file, maps_len);
 }
 
 static bool find_wifi_entry(uint16_t *cluster, uint32_t *size) {
@@ -209,6 +256,10 @@ void usb_msc_init(void) {
   reboot_required = false;
   set_sense(SCSI_SENSE_NONE, 0x00, 0x00);
   tusb_init();
+}
+
+void usb_msc_refresh_files(void) {
+  usb_msc_build_fat_image();
 }
 
 bool usb_msc_handle_wifi_txt(const char *data, unsigned len) {

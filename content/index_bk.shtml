@@ -75,8 +75,15 @@
   </style>
 </head>
 <body>
-<!-- ui-rev: 2026-02-26-01-48 -->
 <h2>JAMMA64 Controller</h2>
+
+<p>Set mode:</p>
+<ul>
+  <li><a href="/mode.cgi?p1=dpad">P1: D-Pad mode</a></li>
+  <li><a href="/mode.cgi?p1=analog">P1: Analog mode</a></li>
+  <li><a href="/mode.cgi?p2=dpad">P2: D-Pad mode</a></li>
+  <li><a href="/mode.cgi?p2=analog">P2: Analog mode</a></li>
+</ul>
 
 <div class="panel">
   <h3>Clickable Controller</h3>
@@ -133,6 +140,31 @@
   </div>
 </div>
 
+<p>Virtual button press links:</p>
+<ul>
+  <li><a href="/press.cgi?btn=start&ms=80">Press START</a></li>
+  <li><a href="/press.cgi?btn=z&ms=80">Press Z</a></li>
+  <li><a href="/press.cgi?btn=a&ms=80">Press A</a></li>
+  <li><a href="/press.cgi?btn=b&ms=80">Press B</a></li>
+  <li><a href="/press.cgi?btn=l&ms=80">Press L</a></li>
+  <li><a href="/press.cgi?btn=r&ms=80">Press R</a></li>
+  <li><a href="/press.cgi?btn=cu&ms=80">Press C-Up</a></li>
+  <li><a href="/press.cgi?btn=cd&ms=80">Press C-Down</a></li>
+  <li><a href="/press.cgi?btn=cl&ms=80">Press C-Left</a></li>
+  <li><a href="/press.cgi?btn=cr&ms=80">Press C-Right</a></li>
+  <li><a href="/press.cgi?btn=du&ms=80">Press D-Up</a></li>
+  <li><a href="/press.cgi?btn=dd&ms=80">Press D-Down</a></li>
+  <li><a href="/press.cgi?btn=dl&ms=80">Press D-Left</a></li>
+  <li><a href="/press.cgi?btn=dr&ms=80">Press D-Right</a></li>
+</ul>
+
+<p>Virtual analog stick press (max throw, 80ms):</p>
+<ul>
+  <li><a href="/press.cgi?btn=au&ms=80">Analog Up (max)</a></li>
+  <li><a href="/press.cgi?btn=ad&ms=80">Analog Down (max)</a></li>
+  <li><a href="/press.cgi?btn=al&ms=80">Analog Left (max)</a></li>
+  <li><a href="/press.cgi?btn=ar&ms=80">Analog Right (max)</a></li>
+</ul>
 
 <script>
   (function () {

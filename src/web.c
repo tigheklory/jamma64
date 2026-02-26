@@ -1,5 +1,7 @@
 #include "web.h"
 #include "profile.h"
+#include "mapping_store.h"
+#include "usb_msc.h"
 #include "n64_virtual.h"
 #include "pico/stdlib.h"
 
@@ -7,6 +9,149 @@
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
+
+typedef struct {
+  const char *arcade_key;
+  phys_in_t phys;
+} arcade_phys_map_t;
+
+static const arcade_phys_map_t k_arcade_phys[] = {
+  { "P1_LP", IN_P1_B1 }, { "P1_MP", IN_P1_B2 }, { "P1_HP", IN_P1_B3 },
+  { "P1_LK", IN_P1_B4 }, { "P1_MK", IN_P1_B5 }, { "P1_HK", IN_P1_B6 },
+  { "P1_START", IN_P1_START },
+};
+
+static bool parse_arcade_key(const char *key, phys_in_t *out) {
+  if (!key || !out) return false;
+  for (size_t i = 0; i < sizeof(k_arcade_phys) / sizeof(k_arcade_phys[0]); i++) {
+    if (!strcasecmp(key, k_arcade_phys[i].arcade_key)) {
+      *out = k_arcade_phys[i].phys;
+      return true;
+    }
+  }
+  return false;
+}
+
+static const char *btn_code_for_output(n64_out_t out) {
+  switch (out) {
+    case N64_A: return "a";
+    case N64_B: return "b";
+    case N64_Z: return "z";
+    case N64_START: return "start";
+    case N64_L: return "l";
+    case N64_R: return "r";
+    case N64_CU: return "cu";
+    case N64_CD: return "cd";
+    case N64_CL: return "cl";
+    case N64_CR: return "cr";
+    case N64_DU: return "du";
+    case N64_DD: return "dd";
+    case N64_DL: return "dl";
+    case N64_DR: return "dr";
+    case N64_AU: return "au";
+    case N64_AD: return "ad";
+    case N64_AL: return "al";
+    case N64_AR: return "ar";
+    default: return "";
+  }
+}
+
+static bool parse_btn_to_output(const char *btn, n64_out_t *out) {
+  if (!btn || !out) return false;
+  if (!strcasecmp(btn, "a")) { *out = N64_A; return true; }
+  if (!strcasecmp(btn, "b")) { *out = N64_B; return true; }
+  if (!strcasecmp(btn, "z")) { *out = N64_Z; return true; }
+  if (!strcasecmp(btn, "start")) { *out = N64_START; return true; }
+  if (!strcasecmp(btn, "l")) { *out = N64_L; return true; }
+  if (!strcasecmp(btn, "r")) { *out = N64_R; return true; }
+  if (!strcasecmp(btn, "cu")) { *out = N64_CU; return true; }
+  if (!strcasecmp(btn, "cd")) { *out = N64_CD; return true; }
+  if (!strcasecmp(btn, "cl")) { *out = N64_CL; return true; }
+  if (!strcasecmp(btn, "cr")) { *out = N64_CR; return true; }
+  if (!strcasecmp(btn, "du")) { *out = N64_DU; return true; }
+  if (!strcasecmp(btn, "dd")) { *out = N64_DD; return true; }
+  if (!strcasecmp(btn, "dl")) { *out = N64_DL; return true; }
+  if (!strcasecmp(btn, "dr")) { *out = N64_DR; return true; }
+  if (!strcasecmp(btn, "au")) { *out = N64_AU; return true; }
+  if (!strcasecmp(btn, "ad")) { *out = N64_AD; return true; }
+  if (!strcasecmp(btn, "al")) { *out = N64_AL; return true; }
+  if (!strcasecmp(btn, "ar")) { *out = N64_AR; return true; }
+  return false;
+}
+
+static void clear_assignments_for_phys(profile_t *p, phys_in_t phys) {
+  for (int i = 0; i < N64_OUTPUT_COUNT; i++) {
+    if (p->map[i] == (uint8_t)phys) p->map[i] = 0xFFu;
+  }
+}
+
+static void apply_arcade_assignment(profile_t *p, phys_in_t phys, n64_out_t out) {
+  if (!p) return;
+  clear_assignments_for_phys(p, phys);
+  p->map[out] = (uint8_t)phys;
+}
+
+static const char *find_btn_for_phys(const volatile profile_t *p, phys_in_t phys) {
+  if (!p) return "";
+  for (int out = 0; out < N64_OUTPUT_COUNT; out++) {
+    if (p->map[out] == (uint8_t)phys) return btn_code_for_output((n64_out_t)out);
+  }
+  return "";
+}
+
+static const char *cgi_map_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
+  (void)iIndex;
+  static char redirect[640];
+  const char *action = "apply";
+  const char *name = NULL;
+
+  profile_t next = *(const profile_t *)&g_profile;
+  bool changed = false;
+
+  for (int i = 0; i < iNumParams; i++) {
+    if (!strcmp(pcParam[i], "action")) action = pcValue[i];
+    else if (!strcmp(pcParam[i], "name")) name = pcValue[i];
+  }
+
+  if (!strcasecmp(action, "load")) {
+    if (!name || !mapping_store_load_named(name, &g_profile)) return "/index.shtml";
+    usb_msc_refresh_files();
+
+    int n = snprintf(redirect, sizeof(redirect), "/index.shtml?src=device");
+    if (n < 0 || (size_t)n >= sizeof(redirect)) return "/index.shtml";
+    size_t used = (size_t)n;
+    for (size_t i = 0; i < sizeof(k_arcade_phys) / sizeof(k_arcade_phys[0]); i++) {
+      const char *btn = find_btn_for_phys(&g_profile, k_arcade_phys[i].phys);
+      n = snprintf(
+        redirect + used,
+        sizeof(redirect) - used,
+        "&%s=%s",
+        k_arcade_phys[i].arcade_key,
+        btn
+      );
+      if (n < 0 || (size_t)n >= (sizeof(redirect) - used)) break;
+      used += (size_t)n;
+    }
+    return redirect;
+  }
+
+  for (int i = 0; i < iNumParams; i++) {
+    phys_in_t phys;
+    n64_out_t out;
+    if (!parse_arcade_key(pcParam[i], &phys)) continue;
+    if (!parse_btn_to_output(pcValue[i], &out)) continue;
+    apply_arcade_assignment(&next, phys, out);
+    changed = true;
+  }
+
+  if (changed) g_profile = next;
+  if (!strcasecmp(action, "save") && name && name[0]) {
+    if (mapping_store_save_named(name, &g_profile)) {
+      usb_msc_refresh_files();
+    }
+  }
+  return "/index.shtml";
+}
 
 static const char* cgi_mode_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
   (void)iIndex;
@@ -96,10 +241,11 @@ static const char* cgi_press_handler(int iIndex, int iNumParams, char *pcParam[]
 
 static const tCGI cgis[] = {
   { "/mode.cgi", cgi_mode_handler },
-  { "/press.cgi", cgi_press_handler }
+  { "/press.cgi", cgi_press_handler },
+  { "/map.cgi", cgi_map_handler }
 };
 
 void web_init(void) {
   httpd_init();
-  http_set_cgi_handlers(cgis, 2);
+  http_set_cgi_handlers(cgis, 3);
 }

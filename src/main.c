@@ -12,6 +12,7 @@
 #include "inputs.h"
 #include "web.h"
 #include "profile.h"
+#include "mapping_store.h"
 #include "n64.h"
 
 #include "wifi_config.h"
@@ -42,6 +43,8 @@
 #define WIFI_STACK_INIT_DELAY_MS 2500u
 #define WIFI_STACK_INIT_RETRY_MS 5000u
 #define N64_BOOT_PRIORITY_MS 800u
+#define USB_TASK_PERIOD_US 250u
+#define WIFI_TASK_PERIOD_US 1000u
 
 #if JAMMA64_ENABLE_WIFI
 // Helper to print IP once connected
@@ -89,6 +92,7 @@ static bool connect_wifi_if_configured(uint32_t timeout_ms) {
 int main() {
   stdio_init_all();
   DBG_PRINTF("\nJAMMA64 starting (fw=%s)\n", JAMMA64_FW_VERSION);
+  mapping_store_init_apply(&g_profile);
   inputs_init();
   n64_virtual_clear();
   n64_init();
@@ -116,33 +120,43 @@ int main() {
   absolute_time_t next = make_timeout_time_ms(1000);
 #endif
   bool reboot_notice_printed = false;
+  uint32_t last_usb_task_us = 0;
+  uint32_t last_wifi_task_us = 0;
   while (true) {
     // Keep N64 command/response handling low latency.
     n64_task();
 
-    // Required for USB drive + serial to function
-    tud_task();
+    uint32_t now_us = time_us_32();
+    if ((uint32_t)(now_us - last_usb_task_us) >= USB_TASK_PERIOD_US) {
+      // Required for USB drive + serial to function, but throttled so it
+      // doesn't dominate the high-rate N64 polling loop.
+      tud_task();
+      last_usb_task_us = now_us;
+    }
 
     #if JAMMA64_ENABLE_WIFI
-      // Defer potentially slow Wi-Fi chip init until N64 protocol handling is already active.
-      if (!wifi_stack_ready && absolute_time_diff_us(get_absolute_time(), next_wifi_stack_init) < 0) {
-        int wifi_init = cyw43_arch_init();
-        if (wifi_init == 0) {
-          cyw43_arch_enable_sta_mode();
-          wifi_stack_ready = true;
-          DBG_PRINTF("Wi-Fi stack ready.\n");
-        } else {
-          DBG_PRINTF("cyw43_arch_init failed: %d\n", wifi_init);
-          next_wifi_stack_init = make_timeout_time_ms(WIFI_STACK_INIT_RETRY_MS);
+      if ((uint32_t)(now_us - last_wifi_task_us) >= WIFI_TASK_PERIOD_US) {
+        // Defer potentially slow Wi-Fi chip init until N64 protocol handling is already active.
+        if (!wifi_stack_ready && absolute_time_diff_us(get_absolute_time(), next_wifi_stack_init) < 0) {
+          int wifi_init = cyw43_arch_init();
+          if (wifi_init == 0) {
+            cyw43_arch_enable_sta_mode();
+            wifi_stack_ready = true;
+            DBG_PRINTF("Wi-Fi stack ready.\n");
+          } else {
+            DBG_PRINTF("cyw43_arch_init failed: %d\n", wifi_init);
+            next_wifi_stack_init = make_timeout_time_ms(WIFI_STACK_INIT_RETRY_MS);
+          }
         }
-      }
 
-      // Background Wi-Fi connect attempts (short timeout to keep N64 loop responsive).
-      if (wifi_stack_ready && !web_running) {
-        if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
-          web_running = connect_wifi_if_configured(1200);
-          next_wifi_try = delayed_by_ms(next_wifi_try, 10000);
+        // Background Wi-Fi connect attempts (short timeout to keep N64 loop responsive).
+        if (wifi_stack_ready && !web_running) {
+          if (absolute_time_diff_us(get_absolute_time(), next_wifi_try) < 0) {
+            web_running = connect_wifi_if_configured(1200);
+            next_wifi_try = delayed_by_ms(next_wifi_try, 10000);
+          }
         }
+        last_wifi_task_us = now_us;
       }
     #endif
 
@@ -174,6 +188,9 @@ int main() {
       next = delayed_by_ms(next, 1000);
     }
 #endif
+
+    // One extra N64 service pass after background tasks to reduce jitter.
+    n64_task();
 
     tight_loop_contents();
   }
