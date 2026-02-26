@@ -11,7 +11,6 @@
 
 #include "inputs.h"
 #include "profile.h"
-#include "event_log.h"
 #include "n64_virtual.h"
 
 #include "n64_io.pio.h"
@@ -24,7 +23,7 @@
 
 #if N64_DIAG_ENABLE
 #define N64_DIAG_PRINTF(...) printf(__VA_ARGS__)
-#define N64_DIAG_LOG(...) event_log_appendf(__VA_ARGS__)
+#define N64_DIAG_LOG(...) printf(__VA_ARGS__)
 #else
 #define N64_DIAG_PRINTF(...) ((void)0)
 #define N64_DIAG_LOG(...) ((void)0)
@@ -254,11 +253,22 @@ static void n64_build_p1_report(uint8_t out[4]) {
   if (n64_out_pressed(in, N64_Z))     b0 |= 0x20;
   if (n64_out_pressed(in, N64_START)) b0 |= 0x10;
 
+  bool vdu = n64_virtual_dpad_pressed(N64_VDPAD_UP);
+  bool vdd = n64_virtual_dpad_pressed(N64_VDPAD_DOWN);
+  bool vdl = n64_virtual_dpad_pressed(N64_VDPAD_LEFT);
+  bool vdr = n64_virtual_dpad_pressed(N64_VDPAD_RIGHT);
+
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
-    if (n64_out_pressed(in, N64_DU)) b0 |= 0x08;
-    if (n64_out_pressed(in, N64_DD)) b0 |= 0x04;
-    if (n64_out_pressed(in, N64_DL)) b0 |= 0x02;
-    if (n64_out_pressed(in, N64_DR)) b0 |= 0x01;
+    if (n64_out_pressed(in, N64_DU) || vdu) b0 |= 0x08;
+    if (n64_out_pressed(in, N64_DD) || vdd) b0 |= 0x04;
+    if (n64_out_pressed(in, N64_DL) || vdl) b0 |= 0x02;
+    if (n64_out_pressed(in, N64_DR) || vdr) b0 |= 0x01;
+  } else {
+    // Web virtual d-pad is always routed to N64 d-pad bits.
+    if (vdu) b0 |= 0x08;
+    if (vdd) b0 |= 0x04;
+    if (vdl) b0 |= 0x02;
+    if (vdr) b0 |= 0x01;
   }
 
   uint8_t b1 = 0;
@@ -269,22 +279,22 @@ static void n64_build_p1_report(uint8_t out[4]) {
   if (n64_out_pressed(in, N64_CL)) b1 |= 0x02;
   if (n64_out_pressed(in, N64_CR)) b1 |= 0x01;
 
-  bool su = n64_out_pressed(in, N64_DU);
-  bool sd = n64_out_pressed(in, N64_DD);
-  bool sl = n64_out_pressed(in, N64_DL);
-  bool sr = n64_out_pressed(in, N64_DR);
+  bool su = n64_virtual_analog_pressed(N64_VANALOG_UP);
+  bool sd = n64_virtual_analog_pressed(N64_VANALOG_DOWN);
+  bool sl = n64_virtual_analog_pressed(N64_VANALOG_LEFT);
+  bool sr = n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
   uint8_t mag = g_profile.analog_throw;
 
   uint8_t sx = 0;
   uint8_t sy = 0;
   if (g_profile.p1_stick_mode == STICK_MODE_ANALOG) {
-    su = su || n64_virtual_analog_pressed(N64_VANALOG_UP);
-    sd = sd || n64_virtual_analog_pressed(N64_VANALOG_DOWN);
-    sl = sl || n64_virtual_analog_pressed(N64_VANALOG_LEFT);
-    sr = sr || n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
-    sx = clamp_analog(sl, sr, mag);
-    sy = clamp_analog(sd, su, mag);
+    su = su || n64_out_pressed(in, N64_DU);
+    sd = sd || n64_out_pressed(in, N64_DD);
+    sl = sl || n64_out_pressed(in, N64_DL);
+    sr = sr || n64_out_pressed(in, N64_DR);
   }
+  sx = clamp_analog(sl, sr, mag);
+  sy = clamp_analog(sd, su, mag);
 
   out[0] = b0;
   out[1] = b1;

@@ -41,7 +41,7 @@
   </div>
   <p id="press_status">Loading controller overlay...</p>
   <div id="controller_wrap">
-    <object id="controller_svg" type="image/svg+xml" data="/img/controller_clickable_jamma64_v6.svgz">
+    <object id="controller_svg" type="image/svg+xml" data="/img/controller_clickable_jamma64_v8.svgz">
       Controller SVG failed to load.
     </object>
   </div>

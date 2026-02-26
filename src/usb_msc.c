@@ -1,6 +1,5 @@
 #include "usb_msc.h"
 #include "wifi_config.h"
-#include "event_log.h"
 
 #include "pico/stdlib.h"
 #include "tusb.h"
@@ -8,6 +7,16 @@
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>
+
+#ifndef JAMMA64_ENABLE_USB_DEBUG
+#define JAMMA64_ENABLE_USB_DEBUG 0
+#endif
+
+#if JAMMA64_ENABLE_USB_DEBUG
+#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DBG_PRINTF(...) ((void)0)
+#endif
 
 #define SECTOR_SIZE 512u
 #define SECTOR_COUNT 256u  // 128KB disk
@@ -25,9 +34,6 @@
 #define DATA_START_LBA (ROOT_START_LBA + ROOT_DIR_SECTORS)
 
 #define WIFI_FILE_CLUSTER 2u
-#define LOG_FILE_FIRST_CLUSTER 3u
-#define LOG_FILE_CLUSTER_COUNT 8u
-#define LOG_FILE_MAX_SIZE (LOG_FILE_CLUSTER_COUNT * SECTOR_SIZE)
 
 static uint8_t disk[SECTOR_SIZE * SECTOR_COUNT];
 
@@ -36,14 +42,12 @@ static bool reboot_required;
 static uint8_t sense_key;
 static uint8_t sense_asc;
 static uint8_t sense_ascq;
-static char g_log_export[LOG_FILE_MAX_SIZE + 1];
 
 static const char k_wifi_template[] =
   "# JAMMA64 Wi-Fi config\r\n"
   "# Edit values and save this file.\r\n"
   "SSID=\r\n"
   "PASSWORD=\r\n"
-  "# Optional: CLEAR_LOG=1\r\n"
   "# Optional: REBOOT=1\r\n";
 
 static inline uint8_t *lba_ptr(uint32_t lba) {
@@ -139,13 +143,6 @@ static void usb_msc_build_fat_image(void) {
   memcpy(lba_ptr(FAT2_START_LBA), fat1, SECTOR_SIZE);
   fat12_set(WIFI_FILE_CLUSTER, 0x0FFFu);
 
-  // LOG.TXT cluster chain: 3 -> 4 -> ... -> (3+N-1) -> EOC
-  for (uint16_t i = 0; i < LOG_FILE_CLUSTER_COUNT; i++) {
-    uint16_t c = (uint16_t)(LOG_FILE_FIRST_CLUSTER + i);
-    uint16_t next = (i == (LOG_FILE_CLUSTER_COUNT - 1u)) ? 0x0FFFu : (uint16_t)(c + 1u);
-    fat12_set(c, next);
-  }
-
   // Root directory
   uint8_t *root = lba_ptr(ROOT_START_LBA);
   // Volume label entry
@@ -162,25 +159,6 @@ static void usb_msc_build_fat_image(void) {
   // File data
   uint8_t *data = lba_ptr(cluster_to_lba(WIFI_FILE_CLUSTER));
   memcpy(data, k_wifi_template, strlen(k_wifi_template));
-
-  // LOG.TXT entry
-  uint8_t *lf = &root[64];
-  memcpy(&lf[0], "LOG     TXT", 11);
-  lf[11] = 0x20;  // archive
-  write_le16(&lf[26], LOG_FILE_FIRST_CLUSTER);
-
-  size_t log_len = event_log_copy(g_log_export, sizeof(g_log_export));
-  if (log_len > LOG_FILE_MAX_SIZE) log_len = LOG_FILE_MAX_SIZE;
-  write_le32(&lf[28], (uint32_t)log_len);
-
-  for (uint16_t i = 0; i < LOG_FILE_CLUSTER_COUNT; i++) {
-    uint32_t lba = cluster_to_lba((uint16_t)(LOG_FILE_FIRST_CLUSTER + i));
-    uint8_t *dst = lba_ptr(lba);
-    size_t off = i * SECTOR_SIZE;
-    size_t remain = (log_len > off) ? (log_len - off) : 0;
-    size_t chunk = (remain > SECTOR_SIZE) ? SECTOR_SIZE : remain;
-    if (chunk > 0) memcpy(dst, &g_log_export[off], chunk);
-  }
 }
 
 static bool find_wifi_entry(uint16_t *cluster, uint32_t *size) {
@@ -239,12 +217,12 @@ bool usb_msc_handle_wifi_txt(const char *data, unsigned len) {
 
   if (!c.valid) {
     wifi_config_erase();
-    printf("Wi-Fi creds erased. Reboot required to apply.\n");
+    DBG_PRINTF("Wi-Fi creds erased. Reboot required to apply.\n");
     return true;
   }
 
   if (wifi_config_save(&c)) {
-    printf("Wi-Fi creds saved. Reboot required to apply.\n");
+    DBG_PRINTF("Wi-Fi creds saved. Reboot required to apply.\n");
     return true;
   }
   return false;
@@ -262,25 +240,6 @@ static bool wifi_txt_requests_reboot(const char *buf, uint32_t len) {
     if (!*line || *line == '#') continue;
     if (!strncasecmp(line, "REBOOT=", 7)) {
       const char *v = line + 7;
-      while (*v == ' ' || *v == '\t') v++;
-      if (!strcasecmp(v, "1") || !strcasecmp(v, "TRUE") || !strcasecmp(v, "YES")) return true;
-    }
-  }
-  return false;
-}
-
-static bool wifi_txt_requests_clear_log(const char *buf, uint32_t len) {
-  char tmp[512];
-  if (len >= sizeof(tmp)) len = sizeof(tmp) - 1;
-  memcpy(tmp, buf, len);
-  tmp[len] = '\0';
-
-  char *saveptr = NULL;
-  for (char *line = strtok_r(tmp, "\r\n", &saveptr); line; line = strtok_r(NULL, "\r\n", &saveptr)) {
-    while (*line == ' ' || *line == '\t') line++;
-    if (!*line || *line == '#') continue;
-    if (!strncasecmp(line, "CLEAR_LOG=", 10)) {
-      const char *v = line + 10;
       while (*v == ' ' || *v == '\t') v++;
       if (!strcasecmp(v, "1") || !strcasecmp(v, "TRUE") || !strcasecmp(v, "YES")) return true;
     }
@@ -322,15 +281,10 @@ void tud_msc_write10_complete_cb(uint8_t lun) {
     char wifi_txt[512];
     uint32_t len = 0;
     if (read_wifi_file(wifi_txt, sizeof(wifi_txt), &len)) {
-      if (wifi_txt_requests_clear_log(wifi_txt, len)) {
-        event_log_clear();
-        event_log_flush_now();
-        printf("Event log cleared from WIFI.TXT.\n");
-      }
       if (usb_msc_handle_wifi_txt(wifi_txt, (unsigned)len)) {
         reboot_required = true;
         if (wifi_txt_requests_reboot(wifi_txt, len)) {
-          printf("REBOOT=1 requested in WIFI.TXT. Please reset device manually.\n");
+          DBG_PRINTF("REBOOT=1 requested in WIFI.TXT. Please reset device manually.\n");
         }
       }
     }

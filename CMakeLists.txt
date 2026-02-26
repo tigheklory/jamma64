@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD 17)
 option(JAMMA64_ENABLE_WIFI "Enable Wi-Fi/web stack" ON)
 option(JAMMA64_ENABLE_N64_DIAG "Enable verbose N64 protocol diagnostics" OFF)
 option(JAMMA64_ENABLE_STATUS_PRINTS "Enable 1 Hz status prints" OFF)
+option(JAMMA64_ENABLE_USB_DEBUG "Enable USB CDC/stdout debug prints" OFF)
 set(JAMMA64_RX_TO_TX_DELAY_US "0" CACHE STRING "N64 RX->TX turnaround delay in microseconds")
 set(JAMMA64_N64_BACKEND "builtin" CACHE STRING "N64 backend: builtin or joybus")
 set_property(CACHE JAMMA64_N64_BACKEND PROPERTY STRINGS builtin joybus)
@@ -34,6 +35,12 @@ if(JAMMA64_ENABLE_STATUS_PRINTS)
   set(JAMMA64_ENABLE_STATUS_PRINTS_DEF 1)
 else()
   set(JAMMA64_ENABLE_STATUS_PRINTS_DEF 0)
+endif()
+
+if(JAMMA64_ENABLE_USB_DEBUG)
+  set(JAMMA64_ENABLE_USB_DEBUG_DEF 1)
+else()
+  set(JAMMA64_ENABLE_USB_DEBUG_DEF 0)
 endif()
 
 # Firmware version tag for boot/log identification.
@@ -71,7 +78,7 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/content/ledpass.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/ledfail.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
-  ${CMAKE_CURRENT_LIST_DIR}/content/img/controller_clickable_jamma64_v6.svgz
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/controller_clickable_jamma64_v8.svgz
 )
 
 add_executable(jamma64
@@ -79,7 +86,6 @@ add_executable(jamma64
   src/web.c
   src/inputs.c
   src/profile.c
-  src/event_log.c
   src/wifi_config.c
   src/n64_virtual.c
   src/usb_msc.c
@@ -125,6 +131,7 @@ target_compile_definitions(jamma64 PRIVATE
   JAMMA64_ENABLE_WIFI=${JAMMA64_ENABLE_WIFI_DEF}
   JAMMA64_ENABLE_N64_DIAG=${JAMMA64_ENABLE_N64_DIAG_DEF}
   JAMMA64_ENABLE_STATUS_PRINTS=${JAMMA64_ENABLE_STATUS_PRINTS_DEF}
+  JAMMA64_ENABLE_USB_DEBUG=${JAMMA64_ENABLE_USB_DEBUG_DEF}
   JAMMA64_RX_TO_TX_DELAY_US=${JAMMA64_RX_TO_TX_DELAY_US}
 )
 
@@ -146,7 +153,7 @@ target_link_libraries(jamma64
   hardware_watchdog
 )
 
-pico_enable_stdio_usb(jamma64 1)
+pico_enable_stdio_usb(jamma64 ${JAMMA64_ENABLE_USB_DEBUG_DEF})
 pico_enable_stdio_uart(jamma64 0)
 
 pico_add_extra_outputs(jamma64)

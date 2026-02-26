@@ -15,7 +15,7 @@
 namespace {
 
 constexpr uint kN64DataPin = 2;
-constexpr uint64_t kReplyDelayUs = 4;
+constexpr uint64_t kReplyDelayUs = 0;
 constexpr uint64_t kRxTimeoutUs = 50;
 constexpr uint64_t kResetWaitUs = 50;
 
@@ -47,11 +47,23 @@ static void build_report(n64_report_t *report) {
   report->b = n64_out_pressed(in, N64_B);
   report->z = n64_out_pressed(in, N64_Z);
   report->start = n64_out_pressed(in, N64_START);
+
+  bool vdu = n64_virtual_dpad_pressed(N64_VDPAD_UP);
+  bool vdd = n64_virtual_dpad_pressed(N64_VDPAD_DOWN);
+  bool vdl = n64_virtual_dpad_pressed(N64_VDPAD_LEFT);
+  bool vdr = n64_virtual_dpad_pressed(N64_VDPAD_RIGHT);
+
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
-    report->dpad_up = n64_out_pressed(in, N64_DU);
-    report->dpad_down = n64_out_pressed(in, N64_DD);
-    report->dpad_left = n64_out_pressed(in, N64_DL);
-    report->dpad_right = n64_out_pressed(in, N64_DR);
+    report->dpad_up = n64_out_pressed(in, N64_DU) || vdu;
+    report->dpad_down = n64_out_pressed(in, N64_DD) || vdd;
+    report->dpad_left = n64_out_pressed(in, N64_DL) || vdl;
+    report->dpad_right = n64_out_pressed(in, N64_DR) || vdr;
+  } else {
+    // Web virtual d-pad is always routed to N64 d-pad bits.
+    report->dpad_up = vdu;
+    report->dpad_down = vdd;
+    report->dpad_left = vdl;
+    report->dpad_right = vdr;
   }
 
   report->l = n64_out_pressed(in, N64_L);
@@ -63,15 +75,19 @@ static void build_report(n64_report_t *report) {
 
   uint8_t sx = 0;
   uint8_t sy = 0;
+  bool su = n64_virtual_analog_pressed(N64_VANALOG_UP);
+  bool sd = n64_virtual_analog_pressed(N64_VANALOG_DOWN);
+  bool sl = n64_virtual_analog_pressed(N64_VANALOG_LEFT);
+  bool sr = n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
   if (g_profile.p1_stick_mode == STICK_MODE_ANALOG) {
-    bool su = n64_out_pressed(in, N64_DU) || n64_virtual_analog_pressed(N64_VANALOG_UP);
-    bool sd = n64_out_pressed(in, N64_DD) || n64_virtual_analog_pressed(N64_VANALOG_DOWN);
-    bool sl = n64_out_pressed(in, N64_DL) || n64_virtual_analog_pressed(N64_VANALOG_LEFT);
-    bool sr = n64_out_pressed(in, N64_DR) || n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
-    uint8_t mag = g_profile.analog_throw;
-    sx = clamp_analog(sl, sr, mag);
-    sy = clamp_analog(sd, su, mag);
+    su = su || n64_out_pressed(in, N64_DU);
+    sd = sd || n64_out_pressed(in, N64_DD);
+    sl = sl || n64_out_pressed(in, N64_DL);
+    sr = sr || n64_out_pressed(in, N64_DR);
   }
+  uint8_t mag = g_profile.analog_throw;
+  sx = clamp_analog(sl, sr, mag);
+  sy = clamp_analog(sd, su, mag);
 
   report->stick_x = sx;
   report->stick_y = sy;

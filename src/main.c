@@ -16,7 +16,6 @@
 
 #include "wifi_config.h"
 #include "usb_msc.h"
-#include "event_log.h"
 #include "n64_virtual.h"
 
 #ifndef JAMMA64_FW_VERSION
@@ -30,6 +29,15 @@
 #ifndef JAMMA64_ENABLE_STATUS_PRINTS
 #define JAMMA64_ENABLE_STATUS_PRINTS 0
 #endif
+#ifndef JAMMA64_ENABLE_USB_DEBUG
+#define JAMMA64_ENABLE_USB_DEBUG 0
+#endif
+
+#if JAMMA64_ENABLE_USB_DEBUG
+#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DBG_PRINTF(...) ((void)0)
+#endif
 
 #define WIFI_STACK_INIT_DELAY_MS 2500u
 #define WIFI_STACK_INIT_RETRY_MS 5000u
@@ -41,24 +49,24 @@ static void print_ip(void) {
   struct netif *n = netif_list;
   while (n) {
     if (netif_is_up(n) && !ip4_addr_isany_val(*netif_ip4_addr(n))) {
-      printf("IP: %s\n", ip4addr_ntoa(netif_ip4_addr(n)));
+      DBG_PRINTF("IP: %s\n", ip4addr_ntoa(netif_ip4_addr(n)));
       return;
     }
     n = n->next;
   }
-  printf("IP: (not assigned yet)\n");
+  DBG_PRINTF("IP: (not assigned yet)\n");
 }
 
 static bool connect_wifi_if_configured(uint32_t timeout_ms) {
   wifi_creds_t creds;
   if (!wifi_config_load(&creds) || !creds.valid) {
-    printf("No Wi-Fi creds saved.\n");
-    printf("Plug into a PC and drop wifi.txt on the JAMMA64 USB drive.\n");
-    printf("Format:\nSSID=yourssid\nPASSWORD=yourpassword\n");
+    DBG_PRINTF("No Wi-Fi creds saved.\n");
+    DBG_PRINTF("Plug into a PC and drop wifi.txt on the JAMMA64 USB drive.\n");
+    DBG_PRINTF("Format:\nSSID=yourssid\nPASSWORD=yourpassword\n");
     return false;
   }
 
-  printf("Connecting to Wi-Fi SSID '%s'...\n", creds.ssid);
+  DBG_PRINTF("Connecting to Wi-Fi SSID '%s'...\n", creds.ssid);
   int r = cyw43_arch_wifi_connect_timeout_ms(
     creds.ssid,
     creds.password,
@@ -67,12 +75,12 @@ static bool connect_wifi_if_configured(uint32_t timeout_ms) {
   );
 
   if (r) {
-    printf("Wi-Fi connect failed: %d\n", r);
-    printf("You can update creds by dropping a new wifi.txt on the drive.\n");
+    DBG_PRINTF("Wi-Fi connect failed: %d\n", r);
+    DBG_PRINTF("You can update creds by dropping a new wifi.txt on the drive.\n");
     return false;
   }
 
-  printf("Wi-Fi connected.\n");
+  DBG_PRINTF("Wi-Fi connected.\n");
   web_init();
   return true;
 }
@@ -80,10 +88,7 @@ static bool connect_wifi_if_configured(uint32_t timeout_ms) {
 
 int main() {
   stdio_init_all();
-  printf("\nJAMMA64 starting (fw=%s)\n", JAMMA64_FW_VERSION);
-
-  event_log_init();
-  event_log_appendf("BOOT JAMMA64 fw=%s", JAMMA64_FW_VERSION);
+  DBG_PRINTF("\nJAMMA64 starting (fw=%s)\n", JAMMA64_FW_VERSION);
   inputs_init();
   n64_virtual_clear();
   n64_init();
@@ -118,11 +123,6 @@ int main() {
     // Required for USB drive + serial to function
     tud_task();
 
-    // Persist logs only while not mounted to a host filesystem.
-    if (!tud_mounted()) {
-      event_log_flush_if_needed();
-    }
-
     #if JAMMA64_ENABLE_WIFI
       // Defer potentially slow Wi-Fi chip init until N64 protocol handling is already active.
       if (!wifi_stack_ready && absolute_time_diff_us(get_absolute_time(), next_wifi_stack_init) < 0) {
@@ -130,9 +130,9 @@ int main() {
         if (wifi_init == 0) {
           cyw43_arch_enable_sta_mode();
           wifi_stack_ready = true;
-          printf("Wi-Fi stack ready.\n");
+          DBG_PRINTF("Wi-Fi stack ready.\n");
         } else {
-          printf("cyw43_arch_init failed: %d\n", wifi_init);
+          DBG_PRINTF("cyw43_arch_init failed: %d\n", wifi_init);
           next_wifi_stack_init = make_timeout_time_ms(WIFI_STACK_INIT_RETRY_MS);
         }
       }
@@ -154,17 +154,17 @@ int main() {
       #endif
 
       if (usb_msc_reboot_required() && !reboot_notice_printed) {
-        printf("Wi-Fi saved; reboot required to apply changes.\n");
+        DBG_PRINTF("Wi-Fi saved; reboot required to apply changes.\n");
         reboot_notice_printed = true;
       }
 
-      printf("Mode P1=%s P2=%s throw=%u\n",
+      DBG_PRINTF("Mode P1=%s P2=%s throw=%u\n",
              g_profile.p1_stick_mode == STICK_MODE_DPAD ? "DPAD" : "ANALOG",
              g_profile.p2_stick_mode == STICK_MODE_DPAD ? "DPAD" : "ANALOG",
              g_profile.analog_throw);
 
       inputs_t in = inputs_read();
-      printf("P1 UDLR=%d%d%d%d B1-6=%d%d%d%d%d%d Start=%d Coin=%d\n",
+      DBG_PRINTF("P1 UDLR=%d%d%d%d B1-6=%d%d%d%d%d%d Start=%d Coin=%d\n",
              inputs_get(in, IN_P1_UP), inputs_get(in, IN_P1_DOWN),
              inputs_get(in, IN_P1_LEFT), inputs_get(in, IN_P1_RIGHT),
              inputs_get(in, IN_P1_B1), inputs_get(in, IN_P1_B2), inputs_get(in, IN_P1_B3),

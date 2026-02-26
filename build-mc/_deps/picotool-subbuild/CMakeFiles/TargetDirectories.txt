@@ -1,0 +1,3 @@
+/home/tighe/pico/jamma64/build-mc/_deps/picotool-subbuild/CMakeFiles/picotool-populate.dir
+/home/tighe/pico/jamma64/build-mc/_deps/picotool-subbuild/CMakeFiles/edit_cache.dir
+/home/tighe/pico/jamma64/build-mc/_deps/picotool-subbuild/CMakeFiles/rebuild_cache.dir
