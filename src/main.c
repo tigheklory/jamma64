@@ -94,7 +94,11 @@ static bool connect_wifi_if_configured(uint32_t timeout_ms) {
 int main() {
   stdio_init_all();
   DBG_PRINTF("\nJAMMA64 starting (fw=%s)\n", JAMMA64_FW_VERSION);
-  mapping_store_init_apply(&g_profile);
+  bool fresh_fw = mapping_store_init_apply(&g_profile);
+  if (fresh_fw) {
+    // On new UF2 firmware, wipe persisted Wi-Fi config as part of full factory reset.
+    wifi_config_erase();
+  }
   inputs_init();
   n64_virtual_clear();
   n64_init();

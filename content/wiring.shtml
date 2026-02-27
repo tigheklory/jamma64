@@ -35,6 +35,7 @@
       <option value="jamma">JAMMA signal names</option>
       <option value="cps2">JAMMA/CPS2 harness names</option>
       <option value="capcom">Capcom button names</option>
+      <option value="pins">JAMMA/CPS2 pin numbers</option>
     </select>
     <a class="btn" href="/index.shtml">Back to Controller</a>
   </div>
@@ -48,7 +49,7 @@
   <h3>Active Project GPIO Map</h3>
   <table>
     <thead>
-      <tr><th>GPIO</th><th>Project</th><th>JAMMA</th><th>JAMMA/CPS2 Harness</th><th>Capcom Names</th><th>Notes</th></tr>
+      <tr><th>GPIO</th><th>Project</th><th>JAMMA</th><th>JAMMA/CPS2 Harness</th><th>Capcom Names</th><th>JAMMA Pin</th><th>CPS2 Pin</th><th>Notes</th></tr>
     </thead>
     <tbody id="pin_table_body"></tbody>
   </table>
@@ -181,6 +182,37 @@
       N64_P2_DATA: "N64 Port 2 Data"
     };
 
+    var PROJECT_TO_JAMMA_PIN = {
+      P1_UP: "C22",
+      P1_DOWN: "C23",
+      P1_LEFT: "C24",
+      P1_RIGHT: "C25",
+      P1_B1: "C26",
+      P1_B2: "C27",
+      P1_B3: "C28",
+      P1_START: "C20",
+      P2_UP: "S22",
+      P2_DOWN: "S23",
+      P2_LEFT: "S24",
+      P2_RIGHT: "S25",
+      P2_B1: "S26",
+      P2_B2: "S27",
+      P2_B3: "S28",
+      P2_START: "S21",
+      COIN2: "C19",
+      N64_P1_DATA: "-",
+      N64_P2_DATA: "-"
+    };
+
+    var PROJECT_TO_CPS2_PIN = {
+      P1_B4: "K1 (pin 1)",
+      P1_B5: "K2 (pin 2)",
+      P1_B6: "K3 (pin 3)",
+      P2_B4: "K1 (pin 4)",
+      P2_B5: "K2 (pin 5)",
+      P2_B6: "K3 (pin 6)"
+    };
+
     var PASSTHRU = [
       { jamma: "COIN1", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
       { jamma: "COIN2", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
@@ -202,6 +234,13 @@
       if (mode === "jamma") return PROJECT_TO_JAMMA[project] || project;
       if (mode === "cps2") return PROJECT_TO_CPS2[project] || PROJECT_TO_JAMMA[project] || project;
       if (mode === "capcom") return PROJECT_TO_CAPCOM[project] || PROJECT_TO_JAMMA[project] || project;
+      if (mode === "pins") {
+        var jpin = PROJECT_TO_JAMMA_PIN[project] || "-";
+        var kpin = PROJECT_TO_CPS2_PIN[project] || "-";
+        if (jpin !== "-" && kpin !== "-") return "J:" + jpin + " / K:" + kpin;
+        if (kpin !== "-") return kpin;
+        return jpin;
+      }
       return "GP" + gpio;
     }
 
@@ -239,7 +278,7 @@
       function addSection(label) {
         var tr = document.createElement("tr");
         var td = document.createElement("td");
-        td.colSpan = 6;
+        td.colSpan = 8;
         td.style.fontWeight = "bold";
         td.textContent = label;
         tr.appendChild(td);
@@ -250,12 +289,16 @@
         var jamma = PROJECT_TO_JAMMA[signal] || "-";
         var cps2 = PROJECT_TO_CPS2[signal] || jamma;
         var capcom = PROJECT_TO_CAPCOM[signal] || "-";
+        var jpin = PROJECT_TO_JAMMA_PIN[signal] || "-";
+        var kpin = PROJECT_TO_CPS2_PIN[signal] || "-";
         tr.innerHTML =
           "<td>GP" + gpio + "</td>" +
           "<td>" + signal + "</td>" +
           "<td>" + jamma + "</td>" +
           "<td>" + cps2 + "</td>" +
           "<td>" + capcom + "</td>" +
+          "<td>" + jpin + "</td>" +
+          "<td>" + kpin + "</td>" +
           "<td>" + note + "</td>";
         pinTableEl.appendChild(tr);
       }

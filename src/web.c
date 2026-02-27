@@ -368,7 +368,7 @@ static u16_t ssi_handler(
       char tmp[320];
       size_t used = build_status_json(tmp, sizeof(tmp));
       if (used == 0u) {
-        int n = snprintf(pcInsert, (size_t)iInsertLen, "{\"p1\":\"dpad\",\"throw\":80,\"diagpct\":100,\"map\":{}}");
+        int n = snprintf(pcInsert, (size_t)iInsertLen, "{\"p1\":\"dpad\",\"throw\":80,\"diagpct\":95,\"map\":{}}");
         return (u16_t)((n > 0) ? n : 0);
       }
       int n = snprintf(pcInsert, (size_t)iInsertLen, "%s", tmp);

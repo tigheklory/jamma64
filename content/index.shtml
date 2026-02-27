@@ -48,6 +48,24 @@
       padding: 0.9rem;
       box-sizing: border-box;
     }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+      margin-right: 2.2rem;
+    }
+    .modal-port-toggle {
+      display: inline-flex;
+      gap: 0.3rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .modal-port-toggle .btn[aria-pressed="true"] {
+      border-color: #3d7ac7;
+      background: #e7f2ff;
+      font-weight: 600;
+    }
     .modal-close {
       position: absolute;
       top: 0.35rem;
@@ -83,8 +101,8 @@
   <h3>Clickable Controller</h3>
   <div class="row">
     <label for="press_ms">Press duration (ms):</label>
-    <input id="press_ms" type="range" min="20" max="1500" step="10" value="40" />
-    <strong id="press_ms_value">40</strong>
+    <input id="press_ms" type="range" min="20" max="1500" step="10" value="300" />
+    <strong id="press_ms_value">300</strong>
   </div>
   <p id="press_status">Loading controller overlay...</p>
   <div id="controller_wrap">
@@ -109,8 +127,8 @@
   </div>
   <div class="row">
     <label for="diagonal_scale">Diagonal scale (%):</label>
-    <input id="diagonal_scale" type="range" min="70" max="100" step="1" value="100" />
-    <strong id="diagonal_scale_value">100</strong>
+    <input id="diagonal_scale" type="range" min="70" max="100" step="1" value="95" />
+    <strong id="diagonal_scale_value">95</strong>
   </div>
   <div class="mapping-tools">
     <strong>Current Mapping</strong>
@@ -133,7 +151,14 @@
 <div id="mapping_modal" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="modal-card">
     <button id="mapping_modal_close" class="modal-close" type="button" aria-label="Close">X</button>
-    <strong id="mapping_modal_title">Assign control</strong>
+    <div class="modal-head">
+      <strong id="mapping_modal_title">Assign control</strong>
+      <div class="modal-port-toggle" aria-label="N64 target controller">
+        <span>Target:</span>
+        <button id="mapping_modal_port1" class="btn" type="button" aria-pressed="true">Controller 1</button>
+        <button id="mapping_modal_port2" class="btn" type="button" aria-pressed="false">Controller 2</button>
+      </div>
+    </div>
     <p id="mapping_modal_msg">Click an N64 control to assign.</p>
     <div id="n64_modal_wrap">
       <div id="n64_modal_svg">
@@ -164,6 +189,7 @@
       "P1_LP", "P1_MP", "P1_HP", "P1_LK", "P1_MK", "P1_HK", "P1_START"
     ];
     var STORAGE_KEY = "jamma64_mapping_v1";
+    var STORAGE_PORT_KEY = "jamma64_mapping_port_v1";
     var PROFILE_LIST_STORAGE_KEY = "jamma64_profile_names_v1";
     var DEFAULT_MAPPING = {
       P1_LP: "a",
@@ -210,12 +236,16 @@
     var diagonalScaleValue = $("diagonal_scale_value");
     var modalEl = $("mapping_modal");
     var modalCloseBtn = $("mapping_modal_close");
+    var modalPort1Btn = $("mapping_modal_port1");
+    var modalPort2Btn = $("mapping_modal_port2");
     var modalTitleEl = $("mapping_modal_title");
     var modalMsgEl = $("mapping_modal_msg");
     var n64ModalObj = $("n64_modal_obj");
 
     var mapping = {};
+    var mappingPorts = {};
     var selectedArcadeKey = null;
+    var selectedN64Port = 1;
     var capcomControlGroups = [];
     var capcomLoaded = false;
     var n64ModalLoaded = false;
@@ -226,7 +256,7 @@
 
     function currentMs() {
       var v = parseInt(slider.value, 10);
-      if (!Number.isFinite(v) || v < 1) return 80;
+      if (!Number.isFinite(v) || v < 1) return 300;
       return v;
     }
 
@@ -262,6 +292,14 @@
       return !!VALID_N64_BTNS[String(code || "").toLowerCase()];
     }
 
+    function isArcadeControlKey(key) {
+      return /^P[12]_/.test(String(key || ""));
+    }
+
+    function defaultPortForKey(key) {
+      return String(key || "").indexOf("P2_") === 0 ? 2 : 1;
+    }
+
     function sanitizeMapping(raw) {
       var out = {};
       if (!raw || typeof raw !== "object") return out;
@@ -292,9 +330,46 @@
       return mapping;
     }
 
+    function sanitizeMappingPorts(raw) {
+      var out = {};
+      if (!raw || typeof raw !== "object") return out;
+      Object.keys(raw).forEach(function (k) {
+        if (!isArcadeControlKey(k)) return;
+        var v = parseInt(raw[k], 10);
+        out[k] = (v === 2) ? 2 : 1;
+      });
+      return out;
+    }
+
+    function loadMappingPorts() {
+      var stored = null;
+      try {
+        stored = localStorage.getItem(STORAGE_PORT_KEY);
+      } catch (e) {
+        stored = null;
+      }
+      mappingPorts = {};
+      Object.keys(DEFAULT_MAPPING).forEach(function (k) {
+        mappingPorts[k] = defaultPortForKey(k);
+      });
+      if (!stored) return mappingPorts;
+      try {
+        mappingPorts = Object.assign(mappingPorts, sanitizeMappingPorts(JSON.parse(stored)));
+      } catch (e2) {
+      }
+      return mappingPorts;
+    }
+
     function saveMappings() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mapping));
+      } catch (e) {
+      }
+    }
+
+    function saveMappingPorts() {
+      try {
+        localStorage.setItem(STORAGE_PORT_KEY, JSON.stringify(mappingPorts));
       } catch (e) {
       }
     }
@@ -313,11 +388,16 @@
 
     function clearBrowserMappingState() {
       try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      try { localStorage.removeItem(STORAGE_PORT_KEY); } catch (e) {}
       try { localStorage.removeItem(PROFILE_LIST_STORAGE_KEY); } catch (e) {}
       try { localStorage.removeItem("jamma64_p1_stick_mode_v1"); } catch (e) {}
       cachedProfileNames = [];
       cachedActiveProfile = "";
       mapping = Object.assign({}, DEFAULT_MAPPING);
+      mappingPorts = {};
+      Object.keys(DEFAULT_MAPPING).forEach(function (k) {
+        mappingPorts[k] = defaultPortForKey(k);
+      });
     }
 
     function sanitizeProfileNameForDevice(name) {
@@ -458,7 +538,11 @@
 
     function resetMappings() {
       mapping = Object.assign({}, DEFAULT_MAPPING);
+      Object.keys(DEFAULT_MAPPING).forEach(function (k) {
+        mappingPorts[k] = defaultPortForKey(k);
+      });
       saveMappings();
+      saveMappingPorts();
       updateArcadeLabels();
       pushMappingToDevice("apply", "").then(function (ok) {
         if (ok) refreshDeviceMeta(false);
@@ -537,21 +621,54 @@
       }
     }
 
+    function applyPortTint(groupEl, port) {
+      var bezel = groupEl.querySelector(".bezel");
+      var cap = groupEl.querySelector(".cap");
+      if (!bezel || !cap) return;
+      if (port === 2) {
+        bezel.style.fill = "#39a85b";
+        bezel.style.fillOpacity = "0.35";
+        cap.style.fill = "#39a85b";
+        cap.style.fillOpacity = "0.20";
+        return;
+      }
+      if (port === 1) {
+        bezel.style.fill = "#4a90e2";
+        bezel.style.fillOpacity = "0.35";
+        cap.style.fill = "#4a90e2";
+        cap.style.fillOpacity = "0.20";
+        return;
+      }
+      bezel.style.removeProperty("fill");
+      bezel.style.removeProperty("fill-opacity");
+      cap.style.removeProperty("fill");
+      cap.style.removeProperty("fill-opacity");
+    }
+
     function updateArcadeLabels() {
       if (!capcomLoaded) return;
       capcomControlGroups.forEach(function (groupEl) {
         var key = getArcadeKey(groupEl);
         if (!key) return;
         var textEl = labelTextElForGroup(groupEl);
-        if (!textEl) return;
-        applyLabel(textEl, mapping[key] || "");
+        if (textEl) applyLabel(textEl, mapping[key] || "");
+        if (isArcadeControlKey(key)) {
+          applyPortTint(groupEl, mappingPorts[key] || defaultPortForKey(key));
+        }
       });
+    }
+
+    function setModalPort(port) {
+      selectedN64Port = (port === 2) ? 2 : 1;
+      modalPort1Btn.setAttribute("aria-pressed", selectedN64Port === 1 ? "true" : "false");
+      modalPort2Btn.setAttribute("aria-pressed", selectedN64Port === 2 ? "true" : "false");
     }
 
     function openN64Modal(arcadeKey) {
       selectedArcadeKey = arcadeKey;
       modalTitleEl.textContent = "Assign: " + arcadeKey;
       modalMsgEl.textContent = "Click an N64 control to assign.";
+      setModalPort(mappingPorts[arcadeKey] || defaultPortForKey(arcadeKey));
       modalEl.setAttribute("aria-hidden", "false");
       ensureN64ModalLoaded();
       if (!n64ModalLoaded) modalMsgEl.textContent = "N64 picker is still loading. Try again in a second.";
@@ -574,9 +691,11 @@
           ev.preventDefault();
           if (!selectedArcadeKey) return;
           mapping[selectedArcadeKey] = btn;
+          mappingPorts[selectedArcadeKey] = selectedN64Port;
           saveMappings();
+          saveMappingPorts();
           updateArcadeLabels();
-          setMappingStatus("Mapped " + selectedArcadeKey + " -> " + btn + " (syncing)");
+          setMappingStatus("Mapped " + selectedArcadeKey + " -> C" + selectedN64Port + ":" + btn + " (syncing)");
           pushMappingToDevice("apply", "");
           if (!mappingKeepOpen.checked) closeModal();
         });
@@ -712,7 +831,7 @@
     }
     function currentDiagonalScale() {
       var v = parseInt(diagonalScaleSlider.value, 10);
-      if (!Number.isFinite(v) || v < 70) return 100;
+      if (!Number.isFinite(v) || v < 70) return 95;
       if (v > 100) return 100;
       return v;
     }
@@ -804,6 +923,8 @@
       if (name) mappingProfileNameEl.value = name;
     });
 
+    modalPort1Btn.addEventListener("click", function () { setModalPort(1); });
+    modalPort2Btn.addEventListener("click", function () { setModalPort(2); });
     modalCloseBtn.addEventListener("click", closeModal);
     modalEl.addEventListener("click", function (ev) {
       if (ev.target === modalEl) closeModal();
@@ -833,6 +954,7 @@
 
     function startUi() {
       loadMappings();
+      loadMappingPorts();
       loadProfileListCache();
       renderProfileList();
       try {

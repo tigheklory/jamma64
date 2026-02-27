@@ -10,11 +10,17 @@
 #include "profile.h"
 
 #define MAP_STORE_MAGIC 0x4D415036u
-#define MAP_STORE_VERSION 3u
+#define MAP_STORE_VERSION 4u
+#define MAP_STORE_FW_TAG_MAX 23u
 
 #define MAP_STORE_SECTOR_SIZE 4096u
 #define MAP_STORE_OFFSET (PICO_FLASH_SIZE_BYTES - (2u * MAP_STORE_SECTOR_SIZE))
 #define MAP_STORE_ADDR (XIP_BASE + MAP_STORE_OFFSET)
+#define JAMMA64_DEFAULT_DIAG_PCT 95u
+
+#ifndef JAMMA64_FW_VERSION
+#define JAMMA64_FW_VERSION "dev"
+#endif
 
 typedef struct {
   uint8_t used;
@@ -26,6 +32,8 @@ typedef struct {
   uint32_t magic;
   uint16_t version;
   uint16_t reserved0;
+  char fw_tag[MAP_STORE_FW_TAG_MAX + 1];
+  uint8_t reserved2[3];
   char active_name[MAP_STORE_NAME_MAX + 1];
   uint8_t reserved1[3];
   stored_profile_t entries[MAP_STORE_MAX_PROFILES];
@@ -81,10 +89,17 @@ static int oldest_replace_index(void) {
   return (g_store.entries[0].used ? 0 : -1);
 }
 
+static void store_set_fw_tag(mapping_store_blob_t *store) {
+  if (!store) return;
+  memset(store->fw_tag, 0, sizeof(store->fw_tag));
+  strncpy(store->fw_tag, JAMMA64_FW_VERSION, MAP_STORE_FW_TAG_MAX);
+}
+
 static void store_set_defaults(const profile_t *defaults) {
   memset(&g_store, 0, sizeof(g_store));
   g_store.magic = MAP_STORE_MAGIC;
   g_store.version = MAP_STORE_VERSION;
+  store_set_fw_tag(&g_store);
   strncpy(g_store.active_name, "default", MAP_STORE_NAME_MAX);
   g_store.entries[0].used = 1u;
   strncpy(g_store.entries[0].name, "default", MAP_STORE_NAME_MAX);
@@ -117,23 +132,39 @@ static void persist_store(void) {
   restore_interrupts(ints);
 }
 
-void mapping_store_init_apply(volatile profile_t *active_profile) {
+bool mapping_store_init_apply(volatile profile_t *active_profile) {
+  bool factory_reset_on_new_fw = false;
   profile_t defaults = {0};
   if (active_profile) defaults = *(const profile_t *)active_profile;
 
   const mapping_store_blob_t *flash_blob = (const mapping_store_blob_t *)MAP_STORE_ADDR;
   if (store_valid(flash_blob)) {
     g_store = *flash_blob;
+    if (strncmp(g_store.fw_tag, JAMMA64_FW_VERSION, MAP_STORE_FW_TAG_MAX) != 0) {
+      // New firmware UF2 detected: reset mappings so no state carries over.
+      store_set_defaults(&defaults);
+      persist_store();
+      factory_reset_on_new_fw = true;
+    }
+    // One-time migration: legacy "default" profile stored 100% diagonal scale.
+    // Move it to the current project default (95%) without touching named custom profiles.
+    int def_idx = find_profile_index("default");
+    if (def_idx >= 0 && g_store.entries[def_idx].profile.diagonal_scale_pct == 100u) {
+      g_store.entries[def_idx].profile.diagonal_scale_pct = JAMMA64_DEFAULT_DIAG_PCT;
+      persist_store();
+    }
   } else {
     store_set_defaults(&defaults);
     persist_store();
+    factory_reset_on_new_fw = true;
   }
 
-  if (!active_profile) return;
+  if (!active_profile) return factory_reset_on_new_fw;
   if (!mapping_store_load_named(g_store.active_name, active_profile)) {
     // Fall back to default profile if active name is stale.
     (void)mapping_store_load_named("default", active_profile);
   }
+  return factory_reset_on_new_fw;
 }
 
 bool mapping_store_save_named(const char *name, const volatile profile_t *src_profile) {

@@ -20,7 +20,7 @@ volatile profile_t g_profile = {
   .p1_stick_mode = STICK_MODE_DPAD,
   .p2_stick_mode = STICK_MODE_DPAD,
   .analog_throw = 80,
-  .diagonal_scale_pct = 100
+  .diagonal_scale_pct = 95
 };
 
 static const profile_t k_profile_defaults = {
@@ -41,7 +41,7 @@ static const profile_t k_profile_defaults = {
   .p1_stick_mode = STICK_MODE_DPAD,
   .p2_stick_mode = STICK_MODE_DPAD,
   .analog_throw = 80,
-  .diagonal_scale_pct = 100
+  .diagonal_scale_pct = 95
 };
 
 void profile_get_defaults(profile_t *out) {
