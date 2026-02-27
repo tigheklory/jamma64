@@ -22,10 +22,24 @@ constexpr uint64_t kResetWaitUs = 50;
 joybus_port_t g_port{};
 bool g_port_ready = false;
 
-static inline uint8_t clamp_analog(bool neg, bool pos, uint8_t mag) {
-  if (neg && !pos) return static_cast<uint8_t>(256u - mag);
-  if (pos && !neg) return mag;
-  return 0;
+static inline uint8_t clamp_u8_range(uint8_t v, uint8_t lo, uint8_t hi) {
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
+}
+
+static inline uint8_t clamp_analog_diagonal_safe(
+    bool neg, bool pos, uint8_t mag, bool diagonal, uint8_t diagonal_scale_pct) {
+  if (neg == pos) return 0;
+
+  uint16_t axis = mag;
+  if (diagonal) {
+    // 1/sqrt(2) ~= 181/256 keeps diagonal vector magnitude at or below throw.
+    axis = static_cast<uint16_t>((axis * 181u + 128u) >> 8);
+    axis = static_cast<uint16_t>((axis * diagonal_scale_pct + 50u) / 100u);
+  }
+  if (axis > 127u) axis = 127u;
+  return neg ? static_cast<uint8_t>(256u - axis) : static_cast<uint8_t>(axis);
 }
 
 static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
@@ -104,8 +118,12 @@ static void build_report(n64_report_t *report) {
     sr = sr || joy_right;
   }
   uint8_t mag = g_profile.analog_throw;
-  sx = clamp_analog(sl, sr, mag);
-  sy = clamp_analog(sd, su, mag);
+  uint8_t diag_scale = clamp_u8_range(g_profile.diagonal_scale_pct, 70u, 100u);
+  bool h_active = (sl != sr);
+  bool v_active = (sd != su);
+  bool diagonal = h_active && v_active;
+  sx = clamp_analog_diagonal_safe(sl, sr, mag, diagonal, diag_scale);
+  sy = clamp_analog_diagonal_safe(sd, su, mag, diagonal, diag_scale);
 
   report->stick_x = sx;
   report->stick_y = sy;

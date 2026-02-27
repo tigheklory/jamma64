@@ -3,6 +3,8 @@
   <title>JAMMA64</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico" />
+  <link rel="apple-touch-icon" href="/img/jamma64-itouch-icon.png" />
   <style>
     body { font-family: sans-serif; max-width: 920px; margin: 1rem auto; padding: 0 0.8rem; }
     .panel { border: 1px solid #ccc; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; }
@@ -21,7 +23,6 @@
     }
     #capcom_svg svg { width: 100%; height: auto; display: block; }
     #mapping_status { color: #444; min-height: 1.2rem; }
-    #mapping_json { width: 100%; min-height: 100px; font-family: monospace; box-sizing: border-box; }
     .btn { border: 1px solid #bbb; background: #f6f6f6; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; }
     .btn:active { transform: translateY(1px); }
     .mapping-tools { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
@@ -106,16 +107,27 @@
     <input id="analog_throw" type="range" min="0" max="127" step="1" value="80" />
     <strong id="analog_throw_value">80</strong>
   </div>
-  <div class="mapping-tools">
-    <button id="mapping_reset_btn" class="btn" type="button">Reset to defaults</button>
-    <button id="mapping_export_btn" class="btn" type="button">Export JSON</button>
-    <button id="mapping_import_btn" class="btn" type="button">Import JSON</button>
-    <input id="mapping_profile_name" type="text" placeholder="profile name" style="min-width: 10rem;" />
-    <button id="mapping_save_profile_btn" class="btn" type="button">Save Profile</button>
-    <button id="mapping_load_profile_btn" class="btn" type="button">Load Profile</button>
-    <label><input id="mapping_keep_open" type="checkbox" /> Keep modal open after assign</label>
+  <div class="row">
+    <label for="diagonal_scale">Diagonal scale (%):</label>
+    <input id="diagonal_scale" type="range" min="70" max="100" step="1" value="100" />
+    <strong id="diagonal_scale_value">100</strong>
   </div>
-  <textarea id="mapping_json" spellcheck="false" placeholder='Mapping JSON appears here (export) or paste JSON then click Import'></textarea>
+  <div class="mapping-tools">
+    <strong>Current Mapping</strong>
+    <button id="mapping_reset_btn" class="btn" type="button">Reset Current Mapping</button>
+    <label><input id="mapping_keep_open" type="checkbox" /> Stay in assign popup</label>
+  </div>
+  <div class="mapping-tools">
+    <strong>Profiles on Pico</strong>
+    <input id="mapping_profile_name" type="text" placeholder="profile name" style="min-width: 10rem;" />
+    <button id="mapping_save_profile_btn" class="btn" type="button">Save to Pico</button>
+    <select id="mapping_profiles_select" style="min-width: 10rem;">
+      <option value="">Saved profiles (none)</option>
+    </select>
+    <button id="mapping_profiles_use_btn" class="btn" type="button">Load Selected</button>
+    <button id="mapping_profiles_refresh_btn" class="btn" type="button">Refresh from Pico</button>
+    <button id="mapping_wipe_profiles_btn" class="btn" type="button">Factory Reset (Wipe Pico + Browser)</button>
+  </div>
 </div>
 
 <div id="mapping_modal" role="dialog" aria-modal="true" aria-hidden="true">
@@ -133,6 +145,7 @@
   </div>
 </div>
 
+<p id="fw_meta" style="color:#666;font-size:0.9rem;margin:0.6rem 0 0.8rem 0;"></p>
 
 <script>
   (function () {
@@ -143,14 +156,11 @@
       du: true, dd: true, dl: true, dr: true,
       au: true, ad: true, al: true, ar: true
     };
-    var ARCADE_KEYS = [
-      "P1_LP", "P1_MP", "P1_HP", "P1_LK", "P1_MK", "P1_HK", "P1_START",
-      "P2_LP", "P2_MP", "P2_HP", "P2_LK", "P2_MK", "P2_HK", "P2_START"
-    ];
     var ARCADE_SYNC_KEYS = [
       "P1_LP", "P1_MP", "P1_HP", "P1_LK", "P1_MK", "P1_HK", "P1_START"
     ];
     var STORAGE_KEY = "jamma64_mapping_v1";
+    var PROFILE_LIST_STORAGE_KEY = "jamma64_profile_names_v1";
     var DEFAULT_MAPPING = {
       P1_LP: "a",
       P1_MP: "b",
@@ -173,14 +183,6 @@
       "/assets/capcom_2p_layout_lineart_hover.svgz",
       "/img/capcom_2p_layout_lineart_hover.svgz"
     ];
-    var N64_SVG_CANDIDATES = [
-      "/assets/controller_clickable_jamma64_v5_hand_edited_3.svg",
-      "/assets/controller_clickable_jamma64_v5_hand_edited_3.svgz",
-      "/assets/controller_clickable_jamma64_v8.svg",
-      "/assets/controller_clickable_jamma64_v8.svgz",
-      "/img/controller_clickable_jamma64_v8.svgz",
-      "/img/controller_clickable_jamma64_v6.svgz"
-    ];
 
     var slider = $("press_ms");
     var sliderValue = $("press_ms_value");
@@ -189,16 +191,19 @@
     var mappingStatusEl = $("mapping_status");
     var stickModeStatusEl = $("stick_mode_status");
     var capcomEl = $("capcom_svg");
-    var mappingJsonEl = $("mapping_json");
     var mappingResetBtn = $("mapping_reset_btn");
-    var mappingExportBtn = $("mapping_export_btn");
-    var mappingImportBtn = $("mapping_import_btn");
+    var mappingWipeProfilesBtn = $("mapping_wipe_profiles_btn");
     var mappingProfileNameEl = $("mapping_profile_name");
     var mappingSaveProfileBtn = $("mapping_save_profile_btn");
-    var mappingLoadProfileBtn = $("mapping_load_profile_btn");
+    var mappingProfilesSelectEl = $("mapping_profiles_select");
+    var mappingProfilesRefreshBtn = $("mapping_profiles_refresh_btn");
+    var mappingProfilesUseBtn = $("mapping_profiles_use_btn");
     var mappingKeepOpen = $("mapping_keep_open");
+    var fwMetaEl = $("fw_meta");
     var analogThrowSlider = $("analog_throw");
     var analogThrowValue = $("analog_throw_value");
+    var diagonalScaleSlider = $("diagonal_scale");
+    var diagonalScaleValue = $("diagonal_scale_value");
     var modalEl = $("mapping_modal");
     var modalCloseBtn = $("mapping_modal_close");
     var modalTitleEl = $("mapping_modal_title");
@@ -211,9 +216,9 @@
     var capcomLoaded = false;
     var n64ModalLoaded = false;
     var n64ModalWired = false;
-    var n64CurrentUrl = "";
-    var capcomCurrentUrl = "";
     var p1StickMode = "dpad";
+    var cachedProfileNames = [];
+    var cachedActiveProfile = "";
 
     function currentMs() {
       var v = parseInt(slider.value, 10);
@@ -290,24 +295,145 @@
       }
     }
 
-    function applyMappingFromUrlParams() {
-      var params = new URLSearchParams(window.location.search || "");
-      var saw = false;
-      ARCADE_KEYS.forEach(function (k) {
-        var v = (params.get(k) || "").toLowerCase();
-        if (!isValidBtnCode(v)) return;
-        mapping[k] = v;
-        saw = true;
-      });
-      if (saw) {
-        saveMappings();
-        setMappingStatus("Loaded mapping from device profile.");
+    function saveProfileListCache(names, active) {
+      cachedProfileNames = Array.isArray(names) ? names.slice() : [];
+      cachedActiveProfile = String(active || "");
+      try {
+        localStorage.setItem(PROFILE_LIST_STORAGE_KEY, JSON.stringify({
+          names: cachedProfileNames,
+          active: cachedActiveProfile
+        }));
+      } catch (e) {
       }
+    }
+
+    function clearBrowserMappingState() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      try { localStorage.removeItem(PROFILE_LIST_STORAGE_KEY); } catch (e) {}
+      try { localStorage.removeItem("jamma64_p1_stick_mode_v1"); } catch (e) {}
+      cachedProfileNames = [];
+      cachedActiveProfile = "";
+      mapping = Object.assign({}, DEFAULT_MAPPING);
+    }
+
+    function sanitizeProfileNameForDevice(name) {
+      var s = String(name || "");
+      var out = "";
+      var prevUnderscore = false;
+      for (var i = 0; i < s.length && out.length < 15; i++) {
+        var ch = s.charAt(i);
+        var code = ch.charCodeAt(0);
+        var isAlphaNum =
+          (code >= 48 && code <= 57) ||
+          (code >= 65 && code <= 90) ||
+          (code >= 97 && code <= 122);
+        if (isAlphaNum || ch === "_" || ch === "-" || ch === ".") {
+          out += ch;
+          prevUnderscore = (ch === "_");
+        } else if (/\s/.test(ch)) {
+          if (out && !prevUnderscore && out.length < 15) {
+            out += "_";
+            prevUnderscore = true;
+          }
+        }
+      }
+      return out;
+    }
+
+    function loadProfileListCache() {
+      try {
+        var raw = localStorage.getItem(PROFILE_LIST_STORAGE_KEY);
+        if (!raw) return;
+        var parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.names)) {
+          cachedProfileNames = parsed.names.filter(function (n) {
+            return !!String(n || "").trim();
+          }).map(function (n) {
+            return String(n);
+          });
+        }
+        cachedActiveProfile = parsed && parsed.active ? String(parsed.active) : "";
+      } catch (e) {
+      }
+    }
+
+    function renderProfileList() {
+      if (!mappingProfilesSelectEl) return;
+      mappingProfilesSelectEl.innerHTML = "";
+      var head = document.createElement("option");
+      head.value = "";
+      head.textContent = cachedProfileNames.length ? "Saved profiles" : "Saved profiles (none)";
+      mappingProfilesSelectEl.appendChild(head);
+      cachedProfileNames.forEach(function (name) {
+        var opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = (name === cachedActiveProfile) ? (name + " (active)") : name;
+        mappingProfilesSelectEl.appendChild(opt);
+      });
+      if (cachedActiveProfile) mappingProfilesSelectEl.value = cachedActiveProfile;
+    }
+
+    function applyStatusFromDevice(status) {
+      if (!status || typeof status !== "object") return;
+      if (status.p1 === "analog" || status.p1 === "dpad") {
+        setStickModeStatus(status.p1);
+      }
+      var throwV = parseInt(status.throw, 10);
+      if (Number.isFinite(throwV)) {
+        if (throwV < 0) throwV = 0;
+        if (throwV > 127) throwV = 127;
+        analogThrowSlider.value = String(throwV);
+        analogThrowValue.textContent = String(throwV);
+      }
+      var diagV = parseInt(status.diagpct, 10);
+      if (Number.isFinite(diagV)) {
+        if (diagV < 70) diagV = 70;
+        if (diagV > 100) diagV = 100;
+        diagonalScaleSlider.value = String(diagV);
+        diagonalScaleValue.textContent = String(diagV);
+      }
+      var mapObj = sanitizeMapping(status.map || {});
+      mapping = Object.assign({}, mapping, mapObj);
+      saveMappings();
+      updateArcadeLabels();
+    }
+
+    function refreshDeviceMeta(showStatus) {
+      if (showStatus) setMappingStatus("Refreshing profile list from Pico...");
+      return fetch("/api.shtml", { method: "GET", cache: "no-store" })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("api unavailable");
+          return resp.text();
+        })
+        .then(function (txt) {
+          var data = JSON.parse(txt || "{}");
+          var fw = String(data.fw || "unknown");
+          var build = String(data.build || "unknown");
+          fwMetaEl.textContent = "Firmware: " + fw + " | Build: " + build;
+
+          var profiles = data.profiles || {};
+          var names = Array.isArray(profiles.names) ? profiles.names.map(String) : [];
+          var active = String(profiles.active || "");
+          saveProfileListCache(names, active);
+          renderProfileList();
+          applyStatusFromDevice(data.status || {});
+          if (showStatus) {
+            setMappingStatus("Loaded " + names.length + " saved profile(s) from Pico.");
+          }
+          return true;
+        })
+        .catch(function () {
+          if (showStatus) setMappingStatus("Could not read profile list from Pico.");
+          return false;
+        });
     }
 
     function buildMapUrl(action, name) {
       var parts = ["/map.cgi?action=" + encodeURIComponent(action || "apply")];
       if (name) parts.push("name=" + encodeURIComponent(name));
+      parts.push("p1=" + encodeURIComponent(p1StickMode));
+      parts.push("throw=" + encodeURIComponent(currentThrow()));
+      parts.push("diagpct=" + encodeURIComponent(currentDiagonalScale()));
       ARCADE_SYNC_KEYS.forEach(function (k) {
         var v = (mapping[k] || "").toLowerCase();
         if (!isValidBtnCode(v)) return;
@@ -330,8 +456,31 @@
       mapping = Object.assign({}, DEFAULT_MAPPING);
       saveMappings();
       updateArcadeLabels();
-      pushMappingToDevice("apply", "");
-      setMappingStatus("Mappings reset to defaults.");
+      pushMappingToDevice("apply", "").then(function (ok) {
+        if (ok) refreshDeviceMeta(false);
+      });
+      setMappingStatus("Current mapping reset to defaults.");
+    }
+
+    function loadProfileFromPico(rawName) {
+      var clean = sanitizeProfileNameForDevice(rawName);
+      if (!clean) {
+        setMappingStatus("Pick a saved profile first.");
+        return;
+      }
+      setMappingStatus("Loading profile '" + clean + "' from Pico...");
+      fetch("/map.cgi?action=load&name=" + encodeURIComponent(clean), { method: "GET", cache: "no-store" })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("load failed");
+          return refreshDeviceMeta(false);
+        })
+        .then(function () {
+          mappingProfileNameEl.value = clean;
+          setMappingStatus("Loaded profile '" + clean + "'.");
+        })
+        .catch(function () {
+          setMappingStatus("Failed to load profile '" + clean + "'.");
+        });
     }
 
     function btnToLabel(btnCode) {
@@ -395,29 +544,6 @@
       });
     }
 
-    function tryLoadObjectFromCandidates(objectEl, candidates, validateDoc, onReady, onFail) {
-      var idx = 0;
-      function attempt() {
-        if (idx >= candidates.length) {
-          if (onFail) onFail();
-          return;
-        }
-        var url = candidates[idx++];
-        function onLoad() {
-          objectEl.removeEventListener("load", onLoad);
-          var doc = objectEl.contentDocument;
-          if (doc && (!validateDoc || validateDoc(doc))) {
-            if (onReady) onReady(url, doc);
-            return;
-          }
-          attempt();
-        }
-        objectEl.addEventListener("load", onLoad);
-        objectEl.data = url;
-      }
-      attempt();
-    }
-
     function openN64Modal(arcadeKey) {
       selectedArcadeKey = arcadeKey;
       modalTitleEl.textContent = "Assign: " + arcadeKey;
@@ -464,7 +590,6 @@
       if (doc && doc.querySelector("[data-btn]")) {
         wireN64ModalDoc(doc);
         n64ModalLoaded = true;
-        n64CurrentUrl = mainUrl;
         setMappingStatus("N64 picker loaded.");
       }
       return n64ModalLoaded;
@@ -541,7 +666,6 @@
           if (!svgRoot) { next(); return; }
           capcomEl.innerHTML = "";
           capcomEl.appendChild(svgRoot);
-          capcomCurrentUrl = url;
           wireCapcomDoc(svgRoot);
         });
       }
@@ -582,6 +706,12 @@
       if (v > 127) return 127;
       return v;
     }
+    function currentDiagonalScale() {
+      var v = parseInt(diagonalScaleSlider.value, 10);
+      if (!Number.isFinite(v) || v < 70) return 100;
+      if (v > 100) return 100;
+      return v;
+    }
     analogThrowSlider.addEventListener("input", function () {
       analogThrowValue.textContent = String(currentThrow());
     });
@@ -597,27 +727,38 @@
     });
     analogThrowValue.textContent = String(currentThrow());
 
-    mappingResetBtn.addEventListener("click", resetMappings);
-    mappingExportBtn.addEventListener("click", function () {
-      mappingJsonEl.value = JSON.stringify(mapping, null, 2);
-      setMappingStatus("Mapping exported to text box.");
+    diagonalScaleSlider.addEventListener("input", function () {
+      diagonalScaleValue.textContent = String(currentDiagonalScale());
     });
-    mappingImportBtn.addEventListener("click", function () {
-      var txt = mappingJsonEl.value || "";
-      if (!txt.trim()) {
-        setMappingStatus("Paste JSON before importing.");
-        return;
-      }
-      try {
-        var parsed = JSON.parse(txt);
-        mapping = Object.assign({}, DEFAULT_MAPPING, sanitizeMapping(parsed));
-        saveMappings();
-        updateArcadeLabels();
-        pushMappingToDevice("apply", "");
-        setMappingStatus("Mapping imported.");
-      } catch (e) {
-        setMappingStatus("Invalid JSON.");
-      }
+    diagonalScaleSlider.addEventListener("change", function () {
+      var diag = currentDiagonalScale();
+      fetch("/mode.cgi?diagpct=" + encodeURIComponent(diag), { method: "GET", cache: "no-store" })
+        .then(function () {
+          setMappingStatus("Diagonal scale set to " + diag + "%.");
+        })
+        .catch(function () {
+          setMappingStatus("Failed to set diagonal scale.");
+        });
+    });
+    diagonalScaleValue.textContent = String(currentDiagonalScale());
+
+    mappingResetBtn.addEventListener("click", resetMappings);
+    mappingWipeProfilesBtn.addEventListener("click", function () {
+      if (!window.confirm("Factory reset will wipe all saved Pico profiles and clear browser mapping cache. Continue?")) return;
+      setMappingStatus("Factory reset in progress...");
+      fetch("/map.cgi?action=wipe", { method: "GET", cache: "no-store" })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("wipe failed");
+          clearBrowserMappingState();
+          renderProfileList();
+          return refreshDeviceMeta(false);
+        })
+        .then(function () {
+          setMappingStatus("Factory reset complete. Pico + browser state are back to defaults.");
+        })
+        .catch(function () {
+          setMappingStatus("Factory reset failed.");
+        });
     });
 
     mappingSaveProfileBtn.addEventListener("click", function () {
@@ -628,17 +769,35 @@
       }
       setMappingStatus("Saving profile '" + name + "' to device...");
       pushMappingToDevice("save", name).then(function (ok) {
-        if (ok) setMappingStatus("Saved profile '" + name + "'.");
+        if (ok) {
+          var clean = sanitizeProfileNameForDevice(name);
+          if (clean) {
+            mappingProfileNameEl.value = clean;
+          }
+          refreshDeviceMeta(false).then(function () {
+            setMappingStatus("Saved profile '" + (clean || name) + "' to Pico.");
+          });
+        }
       });
     });
 
-    mappingLoadProfileBtn.addEventListener("click", function () {
-      var name = (mappingProfileNameEl.value || "").trim();
+    mappingProfilesRefreshBtn.addEventListener("click", function () {
+      refreshDeviceMeta(true);
+    });
+
+    mappingProfilesUseBtn.addEventListener("click", function () {
+      var name = (mappingProfilesSelectEl.value || "").trim();
       if (!name) {
-        setMappingStatus("Enter a profile name before loading.");
+        setMappingStatus("Pick a saved profile first.");
         return;
       }
-      window.location.href = "/map.cgi?action=load&name=" + encodeURIComponent(name);
+      mappingProfileNameEl.value = name;
+      loadProfileFromPico(name);
+    });
+
+    mappingProfilesSelectEl.addEventListener("change", function () {
+      var name = (mappingProfilesSelectEl.value || "").trim();
+      if (name) mappingProfileNameEl.value = name;
     });
 
     modalCloseBtn.addEventListener("click", closeModal);
@@ -656,7 +815,6 @@
       if (modalDoc && modalDoc.querySelector("[data-btn]")) {
         wireN64ModalDoc(modalDoc);
         n64ModalLoaded = true;
-        n64CurrentUrl = n64ModalObj.getAttribute("data") || "";
       }
     });
 
@@ -669,13 +827,20 @@
       ensureN64ModalLoaded();
     }
 
-    loadMappings();
-    try {
-      var savedMode = localStorage.getItem("jamma64_p1_stick_mode_v1");
-      if (savedMode === "analog" || savedMode === "dpad") setStickModeStatus(savedMode);
-    } catch (e) {}
-    applyMappingFromUrlParams();
-    loadCapcomInline();
+    function startUi() {
+      loadMappings();
+      loadProfileListCache();
+      renderProfileList();
+      try {
+        var savedMode = localStorage.getItem("jamma64_p1_stick_mode_v1");
+        if (savedMode === "analog" || savedMode === "dpad") setStickModeStatus(savedMode);
+      } catch (e) {}
+      loadCapcomInline();
+      fwMetaEl.textContent = "Firmware: unknown | Build: unknown";
+      refreshDeviceMeta(false);
+    }
+
+    startUi();
 
     window.loadMappings = loadMappings;
     window.saveMappings = saveMappings;

@@ -7,9 +7,10 @@
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 #include "pico/stdlib.h"
+#include "profile.h"
 
 #define MAP_STORE_MAGIC 0x4D415036u
-#define MAP_STORE_VERSION 1u
+#define MAP_STORE_VERSION 3u
 
 #define MAP_STORE_SECTOR_SIZE 4096u
 #define MAP_STORE_OFFSET (PICO_FLASH_SIZE_BYTES - (2u * MAP_STORE_SECTOR_SIZE))
@@ -186,12 +187,13 @@ size_t mapping_store_export_json(char *out, size_t out_max) {
     n = snprintf(
       out + used,
       out_max - used,
-      "%s{\"name\":\"%s\",\"p1\":%u,\"p2\":%u,\"throw\":%u,\"map\":[",
+      "%s{\"name\":\"%s\",\"p1\":%u,\"p2\":%u,\"throw\":%u,\"diag\":%u,\"map\":[",
       first ? "" : ",",
       g_store.entries[i].name,
       (unsigned)p->p1_stick_mode,
       (unsigned)p->p2_stick_mode,
-      (unsigned)p->analog_throw
+      (unsigned)p->analog_throw,
+      (unsigned)p->diagonal_scale_pct
     );
     if (n < 0 || (size_t)n >= (out_max - used)) {
       out[0] = '\0';
@@ -224,4 +226,39 @@ size_t mapping_store_export_json(char *out, size_t out_max) {
   }
   used += (size_t)n;
   return used;
+}
+
+size_t mapping_store_list_names(
+    char names[][MAP_STORE_NAME_MAX + 1],
+    size_t max_names,
+    char *active_name_out,
+    size_t active_name_out_sz) {
+  if (active_name_out && active_name_out_sz > 0u) {
+    active_name_out[0] = '\0';
+    strncpy(active_name_out, g_store.active_name, active_name_out_sz - 1u);
+    active_name_out[active_name_out_sz - 1u] = '\0';
+  }
+
+  if (!names || max_names == 0u) return 0u;
+
+  size_t count = 0u;
+  for (size_t i = 0; i < MAP_STORE_MAX_PROFILES && count < max_names; i++) {
+    if (!g_store.entries[i].used) continue;
+    names[count][0] = '\0';
+    strncpy(names[count], g_store.entries[i].name, MAP_STORE_NAME_MAX);
+    names[count][MAP_STORE_NAME_MAX] = '\0';
+    count++;
+  }
+  return count;
+}
+
+bool mapping_store_reset_defaults(volatile profile_t *active_profile) {
+  profile_t defaults;
+  profile_get_defaults(&defaults);
+  store_set_defaults(&defaults);
+  persist_store();
+  if (active_profile) {
+    *active_profile = defaults;
+  }
+  return true;
 }

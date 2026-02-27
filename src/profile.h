@@ -44,9 +44,13 @@ typedef struct {
 
   // analog throw strength (0..127). We'll use e.g. 80 default.
   uint8_t analog_throw;
+
+  // Additional scaling for normalized diagonal axes (70..100, percent).
+  uint8_t diagonal_scale_pct;
 } profile_t;
 
 extern volatile profile_t g_profile;
+void profile_get_defaults(profile_t *out);
 
 #ifdef __cplusplus
 }

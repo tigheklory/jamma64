@@ -66,6 +66,7 @@ if(JAMMA64_GIT_DIRTY)
 else()
   set(JAMMA64_FW_VERSION_STR "g${JAMMA64_GIT_HASH}")
 endif()
+string(TIMESTAMP JAMMA64_BUILD_DATE_STR "%Y-%m-%dT%H:%M:%SZ" UTC)
 
 pico_sdk_init()
 
@@ -73,10 +74,10 @@ pico_sdk_init()
 pico_add_library(pico_httpd_content NOFLAG)
 pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/content/404.html
+  ${CMAKE_CURRENT_LIST_DIR}/content/api.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml
-  ${CMAKE_CURRENT_LIST_DIR}/content/test.shtml
-  ${CMAKE_CURRENT_LIST_DIR}/content/ledpass.shtml
-  ${CMAKE_CURRENT_LIST_DIR}/content/ledfail.shtml
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/favicon.ico
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/jamma64-itouch-icon.png
   ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
   ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svg
   ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svgz
@@ -131,6 +132,7 @@ target_compile_definitions(jamma64 PRIVATE
   CFG_TUD_CDC=1
   CFG_TUD_MSC=1
   JAMMA64_FW_VERSION=\"${JAMMA64_FW_VERSION_STR}\"
+  JAMMA64_BUILD_DATE=\"${JAMMA64_BUILD_DATE_STR}\"
   JAMMA64_ENABLE_WIFI=${JAMMA64_ENABLE_WIFI_DEF}
   JAMMA64_ENABLE_N64_DIAG=${JAMMA64_ENABLE_N64_DIAG_DEF}
   JAMMA64_ENABLE_STATUS_PRINTS=${JAMMA64_ENABLE_STATUS_PRINTS_DEF}

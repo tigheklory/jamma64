@@ -3,6 +3,7 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "hardware/watchdog.h"
+#include "cyw43.h"
 
 #include "lwip/netif.h"
 #include "lwip/ip4_addr.h"
@@ -45,6 +46,7 @@
 #define N64_BOOT_PRIORITY_MS 800u
 #define USB_TASK_PERIOD_US 250u
 #define WIFI_TASK_PERIOD_US 1000u
+#define WIFI_LINK_CHECK_PERIOD_MS 2000u
 
 #if JAMMA64_ENABLE_WIFI
 // Helper to print IP once connected
@@ -114,6 +116,7 @@ int main() {
     absolute_time_t next_wifi_stack_init = make_timeout_time_ms(WIFI_STACK_INIT_DELAY_MS);
     bool web_running = false;
     absolute_time_t next_wifi_try = make_timeout_time_ms(10000);
+    absolute_time_t next_wifi_link_check = make_timeout_time_ms(WIFI_LINK_CHECK_PERIOD_MS);
   #endif
 
 #if JAMMA64_ENABLE_STATUS_PRINTS
@@ -156,6 +159,17 @@ int main() {
             next_wifi_try = delayed_by_ms(next_wifi_try, 10000);
           }
         }
+
+        if (wifi_stack_ready && web_running &&
+            absolute_time_diff_us(get_absolute_time(), next_wifi_link_check) < 0) {
+          int link = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
+          if (link != CYW43_LINK_UP && link != CYW43_LINK_JOIN && link != CYW43_LINK_NOIP) {
+            DBG_PRINTF("Wi-Fi link dropped (status=%d); scheduling reconnect.\n", link);
+            web_running = false;
+            next_wifi_try = make_timeout_time_ms(250);
+          }
+          next_wifi_link_check = delayed_by_ms(next_wifi_link_check, WIFI_LINK_CHECK_PERIOD_MS);
+        }
         last_wifi_task_us = now_us;
       }
     #endif
@@ -172,10 +186,11 @@ int main() {
         reboot_notice_printed = true;
       }
 
-      DBG_PRINTF("Mode P1=%s P2=%s throw=%u\n",
+      DBG_PRINTF("Mode P1=%s P2=%s throw=%u diag=%u%%\n",
              g_profile.p1_stick_mode == STICK_MODE_DPAD ? "DPAD" : "ANALOG",
              g_profile.p2_stick_mode == STICK_MODE_DPAD ? "DPAD" : "ANALOG",
-             g_profile.analog_throw);
+             g_profile.analog_throw,
+             g_profile.diagonal_scale_pct);
 
       inputs_t in = inputs_read();
       DBG_PRINTF("P1 UDLR=%d%d%d%d B1-6=%d%d%d%d%d%d Start=%d Coin=%d\n",

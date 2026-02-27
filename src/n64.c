@@ -172,10 +172,24 @@ static void n64_reset_rx_sm(bool log_event) {
   g_last_recovery_frame_count = g_frame_err_count;
 }
 
-static inline uint8_t clamp_analog(bool neg, bool pos, uint8_t mag) {
-  if (neg && !pos) return (uint8_t)(256u - mag);
-  if (pos && !neg) return mag;
-  return 0;
+static inline uint8_t clamp_u8_range(uint8_t v, uint8_t lo, uint8_t hi) {
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
+}
+
+static inline uint8_t clamp_analog_diagonal_safe(
+    bool neg, bool pos, uint8_t mag, bool diagonal, uint8_t diagonal_scale_pct) {
+  if (neg == pos) return 0;
+
+  uint16_t axis = mag;
+  if (diagonal) {
+    // 1/sqrt(2) ~= 181/256 keeps diagonal vector magnitude at or below throw.
+    axis = (uint16_t)((axis * 181u + 128u) >> 8);
+    axis = (uint16_t)((axis * diagonal_scale_pct + 50u) / 100u);
+  }
+  if (axis > 127u) axis = 127u;
+  return neg ? (uint8_t)(256u - axis) : (uint8_t)axis;
 }
 
 static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
@@ -292,6 +306,7 @@ static void n64_build_p1_report(uint8_t out[4]) {
   bool sl = n64_virtual_analog_pressed(N64_VANALOG_LEFT);
   bool sr = n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
   uint8_t mag = g_profile.analog_throw;
+  uint8_t diag_scale = clamp_u8_range(g_profile.diagonal_scale_pct, 70u, 100u);
 
   uint8_t sx = 0;
   uint8_t sy = 0;
@@ -311,8 +326,11 @@ static void n64_build_p1_report(uint8_t out[4]) {
     sl = sl || joy_left;
     sr = sr || joy_right;
   }
-  sx = clamp_analog(sl, sr, mag);
-  sy = clamp_analog(sd, su, mag);
+  bool h_active = (sl != sr);
+  bool v_active = (sd != su);
+  bool diagonal = h_active && v_active;
+  sx = clamp_analog_diagonal_safe(sl, sr, mag, diagonal, diag_scale);
+  sy = clamp_analog_diagonal_safe(sd, su, mag, diagonal, diag_scale);
 
   out[0] = b0;
   out[1] = b1;
