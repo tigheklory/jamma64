@@ -145,7 +145,11 @@
   </div>
 </div>
 
-<p id="fw_meta" style="color:#666;font-size:0.9rem;margin:0.6rem 0 0.8rem 0;"></p>
+<p style="color:#666;font-size:0.9rem;margin:0.6rem 0 0.8rem 0;">
+  <span id="fw_meta_text"></span>
+  <span> | </span>
+  <a href="/wiring.shtml">Wiring</a>
+</p>
 
 <script>
   (function () {
@@ -199,7 +203,7 @@
     var mappingProfilesRefreshBtn = $("mapping_profiles_refresh_btn");
     var mappingProfilesUseBtn = $("mapping_profiles_use_btn");
     var mappingKeepOpen = $("mapping_keep_open");
-    var fwMetaEl = $("fw_meta");
+    var fwMetaTextEl = $("fw_meta_text");
     var analogThrowSlider = $("analog_throw");
     var analogThrowValue = $("analog_throw_value");
     var diagonalScaleSlider = $("diagonal_scale");
@@ -409,7 +413,7 @@
           var data = JSON.parse(txt || "{}");
           var fw = String(data.fw || "unknown");
           var build = String(data.build || "unknown");
-          fwMetaEl.textContent = "Firmware: " + fw + " | Build: " + build;
+          fwMetaTextEl.textContent = "Firmware: " + fw + " | Build: " + build;
 
           var profiles = data.profiles || {};
           var names = Array.isArray(profiles.names) ? profiles.names.map(String) : [];
@@ -836,7 +840,7 @@
         if (savedMode === "analog" || savedMode === "dpad") setStickModeStatus(savedMode);
       } catch (e) {}
       loadCapcomInline();
-      fwMetaEl.textContent = "Firmware: unknown | Build: unknown";
+      fwMetaTextEl.textContent = "Firmware: unknown | Build: unknown";
       refreshDeviceMeta(false);
     }
 

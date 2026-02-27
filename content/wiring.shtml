@@ -1,0 +1,327 @@
+<html>
+<head>
+  <title>JAMMA64 Wiring</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico" />
+  <link rel="apple-touch-icon" href="/img/jamma64-itouch-icon.png" />
+  <style>
+    body { font-family: sans-serif; max-width: 980px; margin: 1rem auto; padding: 0 0.8rem; }
+    .panel { border: 1px solid #ccc; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; }
+    .row { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
+    .btn { border: 1px solid #bbb; background: #f6f6f6; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; }
+    .pinout-wrap {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      overflow: auto;
+    }
+    #pinout_root svg { width: 100%; height: auto; display: block; min-width: 760px; }
+    .hint { color: #555; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 0.35rem 0.45rem; text-align: left; font-size: 0.92rem; }
+    th { background: #f6f6f6; }
+  </style>
+</head>
+<body>
+<h2>JAMMA64 Wiring Reference</h2>
+
+<div class="panel">
+  <div class="row">
+    <label for="label_mode">Pin Label Mode:</label>
+    <select id="label_mode">
+      <option value="gpio">GPIO labels</option>
+      <option value="project">Project labels</option>
+      <option value="jamma">JAMMA signal names</option>
+      <option value="cps2">JAMMA/CPS2 harness names</option>
+      <option value="capcom">Capcom button names</option>
+    </select>
+    <a class="btn" href="/index.shtml">Back to Controller</a>
+  </div>
+  <p class="hint">Label mode is client-side only and updates the text layer in the pinout SVG.</p>
+  <div id="pinout_wrap" class="pinout-wrap">
+    <div id="pinout_root">Loading pinout...</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Active Project GPIO Map</h3>
+  <table>
+    <thead>
+      <tr><th>GPIO</th><th>Project</th><th>JAMMA</th><th>JAMMA/CPS2 Harness</th><th>Capcom Names</th><th>Notes</th></tr>
+    </thead>
+    <tbody id="pin_table_body"></tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h3>Direct JAMMA Passthrough (Not Sampled by Pico)</h3>
+  <table>
+    <thead>
+      <tr><th>JAMMA Signal</th><th>Route</th><th>Notes</th></tr>
+    </thead>
+    <tbody id="passthrough_table_body"></tbody>
+  </table>
+</div>
+
+<script>
+  (function () {
+    function $(id) { return document.getElementById(id); }
+    var modeEl = $("label_mode");
+    var pinoutRootEl = $("pinout_root");
+    var pinTableEl = $("pin_table_body");
+    var passthroughTableEl = $("passthrough_table_body");
+
+    var GPIO_TO_PROJECT = {
+      0: "P2_B6",
+      1: "P2_START",
+      2: "N64_P1_DATA",
+      3: "N64_P2_DATA",
+      6: "P1_UP",
+      7: "P1_DOWN",
+      8: "P1_LEFT",
+      9: "P1_RIGHT",
+      10: "P1_B1",
+      11: "P1_B2",
+      12: "P1_B3",
+      13: "P1_B4",
+      14: "P1_B5",
+      15: "P1_B6",
+      16: "P1_START",
+      17: "P2_B3",
+      18: "P2_B4",
+      19: "P2_B5",
+      20: "P2_UP",
+      21: "P2_DOWN",
+      22: "P2_LEFT",
+      26: "P2_RIGHT",
+      27: "P2_B1",
+      28: "P2_B2"
+    };
+
+    var PROJECT_TO_JAMMA = {
+      P1_UP: "1P UP",
+      P1_DOWN: "1P DOWN",
+      P1_LEFT: "1P LEFT",
+      P1_RIGHT: "1P RIGHT",
+      P1_B1: "1P BTN1",
+      P1_B2: "1P BTN2",
+      P1_B3: "1P BTN3",
+      P1_B4: "1P BTN4",
+      P1_B5: "1P BTN5",
+      P1_B6: "1P BTN6",
+      P1_START: "1P START",
+      P2_UP: "2P UP",
+      P2_DOWN: "2P DOWN",
+      P2_LEFT: "2P LEFT",
+      P2_RIGHT: "2P RIGHT",
+      P2_B1: "2P BTN1",
+      P2_B2: "2P BTN2",
+      P2_B3: "2P BTN3",
+      P2_B4: "2P BTN4",
+      P2_B5: "2P BTN5",
+      P2_B6: "2P BTN6",
+      P2_START: "2P START",
+      N64_P2_DATA: "N64 P2 DATA",
+      N64_P1_DATA: "N64 P1 DATA"
+    };
+
+    var PROJECT_TO_CPS2 = {
+      P1_UP: "JAMMA 1P UP",
+      P1_DOWN: "JAMMA 1P DOWN",
+      P1_LEFT: "JAMMA 1P LEFT",
+      P1_RIGHT: "JAMMA 1P RIGHT",
+      P1_B1: "JAMMA 1P SW1",
+      P1_B2: "JAMMA 1P SW2",
+      P1_B3: "JAMMA 1P SW3",
+      P1_B4: "CPS2 KICK 1P K1",
+      P1_B5: "CPS2 KICK 1P K2",
+      P1_B6: "CPS2 KICK 1P K3",
+      P1_START: "JAMMA 1P START",
+      P2_UP: "JAMMA 2P UP",
+      P2_DOWN: "JAMMA 2P DOWN",
+      P2_LEFT: "JAMMA 2P LEFT",
+      P2_RIGHT: "JAMMA 2P RIGHT",
+      P2_B1: "JAMMA 2P SW1",
+      P2_B2: "JAMMA 2P SW2",
+      P2_B3: "JAMMA 2P SW3",
+      P2_B4: "CPS2 KICK 2P K1",
+      P2_B5: "CPS2 KICK 2P K2",
+      P2_B6: "CPS2 KICK 2P K3",
+      P2_START: "JAMMA 2P START",
+      N64_P2_DATA: "N64 PORT2 DATA",
+      N64_P1_DATA: "N64 PORT1 DATA"
+    };
+
+    var PROJECT_TO_CAPCOM = {
+      P1_UP: "P1 Joystick Up",
+      P1_DOWN: "P1 Joystick Down",
+      P1_LEFT: "P1 Joystick Left",
+      P1_RIGHT: "P1 Joystick Right",
+      P1_B1: "P1 Light Punch",
+      P1_B2: "P1 Medium Punch",
+      P1_B3: "P1 Hard Punch",
+      P1_B4: "P1 Light Kick",
+      P1_B5: "P1 Medium Kick",
+      P1_B6: "P1 Hard Kick",
+      P1_START: "P1 Start",
+      P2_UP: "P2 Joystick Up",
+      P2_DOWN: "P2 Joystick Down",
+      P2_LEFT: "P2 Joystick Left",
+      P2_RIGHT: "P2 Joystick Right",
+      P2_B1: "P2 Light Punch",
+      P2_B2: "P2 Medium Punch",
+      P2_B3: "P2 Hard Punch",
+      P2_B4: "P2 Light Kick",
+      P2_B5: "P2 Medium Kick",
+      P2_B6: "P2 Hard Kick",
+      P2_START: "P2 Start",
+      COIN2: "Coin 2",
+      N64_P1_DATA: "N64 Port 1 Data",
+      N64_P2_DATA: "N64 Port 2 Data"
+    };
+
+    var PASSTHRU = [
+      { jamma: "COIN1", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
+      { jamma: "COIN2", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
+      { jamma: "SERVICE", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
+      { jamma: "TEST", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" }
+    ];
+
+    var pinTextNodes = [];
+    var gpioByPinId = {};
+    var baseLabelByPinId = {};
+
+    function labelForMode(pinId, mode) {
+      var base = baseLabelByPinId[pinId] || "";
+      var gpio = gpioByPinId[pinId];
+      if (!Number.isFinite(gpio)) return base;
+      var project = GPIO_TO_PROJECT[gpio];
+      if (!project) return base;
+      if (mode === "project") return project;
+      if (mode === "jamma") return PROJECT_TO_JAMMA[project] || project;
+      if (mode === "cps2") return PROJECT_TO_CPS2[project] || PROJECT_TO_JAMMA[project] || project;
+      if (mode === "capcom") return PROJECT_TO_CAPCOM[project] || PROJECT_TO_JAMMA[project] || project;
+      return "GP" + gpio;
+    }
+
+    function applyMode() {
+      var mode = modeEl.value || "gpio";
+      pinTextNodes.forEach(function (node) {
+        var pinId = node.id || "";
+        node.textContent = labelForMode(pinId, mode);
+      });
+    }
+
+    function parsePinoutSvg(svgText) {
+      var doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
+      if (!doc || doc.querySelector("parsererror")) return null;
+      return doc.documentElement;
+    }
+
+    function wirePinText(svgEl) {
+      pinTextNodes = [];
+      gpioByPinId = {};
+      baseLabelByPinId = {};
+      var nodes = svgEl.querySelectorAll("g#text_labels text[id^='pin']");
+      nodes.forEach(function (node) {
+        var id = node.id || "";
+        var t = String(node.textContent || "").trim();
+        baseLabelByPinId[id] = t;
+        var m = /^GP(\d+)$/i.exec(t);
+        if (m) gpioByPinId[id] = parseInt(m[1], 10);
+        pinTextNodes.push(node);
+      });
+    }
+
+    function renderPinTable() {
+      pinTableEl.innerHTML = "";
+      function addSection(label) {
+        var tr = document.createElement("tr");
+        var td = document.createElement("td");
+        td.colSpan = 6;
+        td.style.fontWeight = "bold";
+        td.textContent = label;
+        tr.appendChild(td);
+        pinTableEl.appendChild(tr);
+      }
+      function addRow(gpio, signal, note) {
+        var tr = document.createElement("tr");
+        var jamma = PROJECT_TO_JAMMA[signal] || "-";
+        var cps2 = PROJECT_TO_CPS2[signal] || jamma;
+        var capcom = PROJECT_TO_CAPCOM[signal] || "-";
+        tr.innerHTML =
+          "<td>GP" + gpio + "</td>" +
+          "<td>" + signal + "</td>" +
+          "<td>" + jamma + "</td>" +
+          "<td>" + cps2 + "</td>" +
+          "<td>" + capcom + "</td>" +
+          "<td>" + note + "</td>";
+        pinTableEl.appendChild(tr);
+      }
+      addSection("Core");
+      addRow(2, "N64_P1_DATA", "Joybus data line");
+      addRow(3, "N64_P2_DATA", "Reserved for future Joybus P2 output");
+
+      addSection("Player 1");
+      addRow(6, "P1_UP", "JAMMA input");
+      addRow(7, "P1_DOWN", "JAMMA input");
+      addRow(8, "P1_LEFT", "JAMMA input");
+      addRow(9, "P1_RIGHT", "JAMMA input");
+      addRow(10, "P1_B1", "JAMMA input");
+      addRow(11, "P1_B2", "JAMMA input");
+      addRow(12, "P1_B3", "JAMMA input");
+      addRow(13, "P1_B4", "CPS2 kick harness input");
+      addRow(14, "P1_B5", "CPS2 kick harness input");
+      addRow(15, "P1_B6", "CPS2 kick harness input");
+      addRow(16, "P1_START", "JAMMA input");
+
+      addSection("Player 2");
+      addRow(20, "P2_UP", "JAMMA input");
+      addRow(21, "P2_DOWN", "JAMMA input");
+      addRow(22, "P2_LEFT", "JAMMA input");
+      addRow(26, "P2_RIGHT", "JAMMA input");
+      addRow(27, "P2_B1", "JAMMA input");
+      addRow(28, "P2_B2", "JAMMA input");
+      addRow(17, "P2_B3", "JAMMA input");
+      addRow(18, "P2_B4", "CPS2 kick harness input");
+      addRow(19, "P2_B5", "CPS2 kick harness input");
+      addRow(0, "P2_B6", "CPS2 kick harness input");
+      addRow(1, "P2_START", "JAMMA input");
+
+    }
+
+    function renderPassthroughTable() {
+      passthroughTableEl.innerHTML = "";
+      PASSTHRU.forEach(function (p) {
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td>" + p.jamma + "</td><td>" + p.route + "</td><td>" + p.note + "</td>";
+        passthroughTableEl.appendChild(tr);
+      });
+    }
+
+    modeEl.addEventListener("change", applyMode);
+
+    fetch("/img/pico_2w_pinout_text_labels.svg", { cache: "no-store" })
+      .then(function (resp) {
+        if (!resp.ok) throw new Error("missing svg");
+        return resp.text();
+      })
+      .then(function (svgText) {
+        var svgEl = parsePinoutSvg(svgText);
+        if (!svgEl) throw new Error("invalid svg");
+        pinoutRootEl.innerHTML = "";
+        pinoutRootEl.appendChild(svgEl);
+        wirePinText(svgEl);
+        applyMode();
+      })
+      .catch(function () {
+        pinoutRootEl.textContent = "Could not load pinout SVG.";
+      });
+
+    renderPinTable();
+    renderPassthroughTable();
+  })();
+</script>
+</body>
+</html>

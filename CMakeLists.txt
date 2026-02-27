@@ -76,9 +76,11 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/content/404.html
   ${CMAKE_CURRENT_LIST_DIR}/content/api.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml
+  ${CMAKE_CURRENT_LIST_DIR}/content/wiring.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/img/favicon.ico
   ${CMAKE_CURRENT_LIST_DIR}/content/img/jamma64-itouch-icon.png
   ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/pico_2w_pinout_text_labels.svg
   ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svg
   ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svgz
   ${CMAKE_CURRENT_LIST_DIR}/content/img/controller_clickable_jamma64_v8.svgz

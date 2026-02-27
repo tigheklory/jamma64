@@ -1,6 +1,8 @@
 #include "inputs.h"
 #include "pico/stdlib.h"
 
+#define PIN_UNUSED 0xFFu
+
 // Pick GPIOs for your harness here.
 // Convention: active-low switches to GND with pull-ups enabled.
 static const uint8_t pin_for_input[IN_COUNT] = {
@@ -17,9 +19,11 @@ static const uint8_t pin_for_input[IN_COUNT] = {
   [IN_P1_B6] = 15,
 
   [IN_P1_START] = 16,
-  [IN_COIN1]    = 17,
-  [IN_SERVICE]  = 18,
-  [IN_TEST]     = 19,
+  // Coin/service/test are intentionally not read by Pico now.
+  // Wire these straight through to Aleck 64.
+  [IN_COIN1]    = PIN_UNUSED,
+  [IN_SERVICE]  = PIN_UNUSED,
+  [IN_TEST]     = PIN_UNUSED,
 
   // P2 placeholders (set once wired)
   [IN_P2_UP]    = 20,
@@ -29,19 +33,19 @@ static const uint8_t pin_for_input[IN_COUNT] = {
 
   [IN_P2_B1] = 27,
   [IN_P2_B2] = 28,
-  [IN_P2_B3] = 0,  // TODO
-  [IN_P2_B4] = 0,  // TODO
-  [IN_P2_B5] = 0,  // TODO
-  [IN_P2_B6] = 0,  // TODO
+  [IN_P2_B3] = 17,
+  [IN_P2_B4] = 18,
+  [IN_P2_B5] = 19,
+  [IN_P2_B6] = 0,
 
-  [IN_P2_START] = 0, // TODO
-  [IN_COIN2]    = 0, // TODO
+  [IN_P2_START] = 1,
+  [IN_COIN2]    = PIN_UNUSED,
 };
 
 void inputs_init(void) {
   for (int i = 0; i < IN_COUNT; i++) {
     uint8_t pin = pin_for_input[i];
-    if (pin == 0) continue; // not assigned yet
+    if (pin == PIN_UNUSED) continue; // not assigned yet
     gpio_init(pin);
     gpio_set_dir(pin, GPIO_IN);
     gpio_pull_up(pin);
@@ -52,7 +56,7 @@ inputs_t inputs_read(void) {
   inputs_t r = {0};
   for (int i = 0; i < IN_COUNT; i++) {
     uint8_t pin = pin_for_input[i];
-    if (pin == 0) continue;
+    if (pin == PIN_UNUSED) continue;
     // active-low: pressed == 1
     bool pressed = (gpio_get(pin) == 0);
     if (pressed) r.bits |= (1ull << i);
