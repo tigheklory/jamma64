@@ -6,3 +6,34 @@ build-mc/
 *.hex
 *.map
 third_party/joybus-pio/
+old/
+
+# --- KiCad cache / temp ---
+*.kicad_prl
+*.kicad_pro-bak
+*.kicad_sch-bak
+*.kicad_pcb-bak
+
+# Auto-save & rescue
+*_autosave-*
+*.kicad_sch-autosave
+*.kicad_pcb-autosave
+
+# Lock files
+*.lck
+
+# Netlist cache (safe to ignore)
+*.net
+
+# Plot outputs (optional — only if you don't want generated files in git)
+*.gbr
+*.drl
+*.zip
+
+# Python cache (if you script)
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+Thumbs.db
