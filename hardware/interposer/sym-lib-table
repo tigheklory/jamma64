@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "JAMMA64_symbols")(type "KiCad")(uri "${KIPRJMOD}/sym/JAMMA64_symbols.kicad_sym")(options "")(descr ""))
+)
