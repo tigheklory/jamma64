@@ -35,8 +35,9 @@ typedef enum {
 } phys_in_t;
 
 typedef struct {
-  // mapping: N64 output -> physical input index, or 0xFF = unassigned
-  uint8_t map[N64_OUTPUT_COUNT];
+  // mapping: physical input -> N64 output index, or 0xFF = unassigned
+  // This allows multiple physical inputs to target the same N64 output.
+  uint8_t map[IN_COUNT];
 
   // shared joystick switches can act as DPAD or ANALOG depending on mode
   stick_mode_t p1_stick_mode;

@@ -9,9 +9,14 @@
     body { font-family: sans-serif; max-width: 920px; margin: 1rem auto; padding: 0 0.8rem; }
     .panel { border: 1px solid #ccc; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; }
     .row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .section-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .section-tabs .btn[aria-pressed="true"] { border-color: #3d7ac7; background: #e7f2ff; }
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+    .section-help { margin: 0.2rem 0 0.6rem; color: #555; font-size: 0.95rem; }
     #press_ms { width: 280px; }
-    #controller_wrap { width: 100%; max-width: 760px; }
-    #controller_svg { width: 100%; height: auto; min-height: 320px; border: 1px solid #ddd; border-radius: 8px; }
+    #controller_wrap { width: 100%; max-width: 760px; margin: 0 auto; display: flex; justify-content: center; }
+    #controller_svg { width: 100%; height: auto; min-height: 320px; border: 0; }
     #mapping_panel_wrap { width: 100%; max-width: 860px; }
     #capcom_svg {
       width: 100%;
@@ -23,9 +28,17 @@
     }
     #capcom_svg svg { width: 100%; height: auto; display: block; }
     #mapping_status { color: #444; min-height: 1.2rem; }
-    .btn { border: 1px solid #bbb; background: #f6f6f6; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; }
+    .btn { border: 1px solid #bbb; background: #f6f6f6; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 1rem; color: #111; text-decoration: none; display: inline-block; line-height: 1.2; }
+    a.btn:link, a.btn:visited, a.btn:hover, a.btn:active { color: #111; text-decoration: none; }
     .btn:active { transform: translateY(1px); }
     .mapping-tools { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.6rem 0; }
+    .tool-group {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+    }
+    .tool-group-title { font-weight: 700; margin-bottom: 0.35rem; }
     #mapping_modal {
       display: none;
       position: fixed;
@@ -97,8 +110,16 @@
 <!-- ui-rev: 2026-02-26-01-48 -->
 <h2>JAMMA64 Controller</h2>
 
-<div class="panel">
+<div class="section-tabs" role="tablist" aria-label="Main sections">
+  <button id="tab_btn_controller" class="btn" type="button" aria-pressed="true">On screen controller</button>
+  <button id="tab_btn_digital_analog" class="btn" type="button" aria-pressed="false">Digtal/Analog</button>
+  <button id="tab_btn_mappings" class="btn" type="button" aria-pressed="false">Button Mappings</button>
+  <a class="btn" href="/wiring.shtml">Wiring</a>
+</div>
+
+<div id="section_controller" class="panel section-panel active">
   <h3>Clickable Controller</h3>
+  <p class="section-help">Use this tab to send quick virtual button presses to verify controller input behavior and timing.</p>
   <div class="row">
     <label for="press_ms">Press duration (ms):</label>
     <input id="press_ms" type="range" min="20" max="1500" step="10" value="300" />
@@ -112,14 +133,10 @@
   </div>
 </div>
 
-<div class="panel">
-  <h3>Arcade to N64 Mapping Editor</h3>
-  <p>Click any arcade control, then click an N64 control to assign.</p>
-  <p id="mapping_status">Loading arcade panel...</p>
+<div id="section_digital_analog" class="panel section-panel">
+  <h3>Digital to Analog Preferences</h3>
+  <p class="section-help">Tune how digital joystick directions are converted to N64 analog values. Start with defaults, then adjust per game feel.</p>
   <p id="stick_mode_status">Joystick mode: D-Pad</p>
-  <div id="mapping_panel_wrap">
-    <div id="capcom_svg">Loading Capcom SVG...</div>
-  </div>
   <div class="row">
     <label for="analog_throw">Analog throw:</label>
     <input id="analog_throw" type="range" min="0" max="127" step="1" value="80" />
@@ -130,21 +147,39 @@
     <input id="diagonal_scale" type="range" min="70" max="100" step="1" value="95" />
     <strong id="diagonal_scale_value">95</strong>
   </div>
-  <div class="mapping-tools">
-    <strong>Current Mapping</strong>
-    <button id="mapping_reset_btn" class="btn" type="button">Reset Current Mapping</button>
-    <label><input id="mapping_keep_open" type="checkbox" /> Stay in assign popup</label>
+</div>
+
+<div id="section_mappings" class="panel section-panel">
+  <h3>Arcade to N64 Mapping Editor</h3>
+  <p class="section-help">Assign each arcade control to an N64 input, then save/load profiles stored on the Pico.</p>
+  <p>Click any arcade control, then click an N64 control to assign.</p>
+  <p id="mapping_status">Loading arcade panel...</p>
+  <div id="mapping_panel_wrap">
+    <div id="capcom_svg">Loading Capcom SVG...</div>
   </div>
-  <div class="mapping-tools">
-    <strong>Profiles on Pico</strong>
-    <input id="mapping_profile_name" type="text" placeholder="profile name" style="min-width: 10rem;" />
-    <button id="mapping_save_profile_btn" class="btn" type="button">Save to Pico</button>
-    <select id="mapping_profiles_select" style="min-width: 10rem;">
-      <option value="">Saved profiles (none)</option>
-    </select>
-    <button id="mapping_profiles_use_btn" class="btn" type="button">Load Selected</button>
-    <button id="mapping_profiles_refresh_btn" class="btn" type="button">Refresh from Pico</button>
-    <button id="mapping_wipe_profiles_btn" class="btn" type="button">Factory Reset (Wipe Pico + Browser)</button>
+  <div class="tool-group">
+    <div class="tool-group-title">Create Profile</div>
+    <div class="mapping-tools">
+      <input id="mapping_profile_name" type="text" placeholder="profile name" style="min-width: 10rem;" />
+      <button id="mapping_save_profile_btn" class="btn" type="button">Save</button>
+    </div>
+  </div>
+  <div class="tool-group">
+    <div class="tool-group-title">Load Profile</div>
+    <div class="mapping-tools">
+      <select id="mapping_profiles_select" style="min-width: 10rem;">
+        <option value="">Saved profiles (none)</option>
+      </select>
+      <button id="mapping_profiles_use_btn" class="btn" type="button">Load</button>
+    </div>
+  </div>
+  <div class="tool-group">
+    <div class="tool-group-title">Maintenance</div>
+    <div class="mapping-tools">
+      <button id="mapping_reset_btn" class="btn" type="button">Reset Current Mapping</button>
+      <button id="mapping_profiles_refresh_btn" class="btn" type="button">Refresh from Pico</button>
+      <button id="mapping_wipe_profiles_btn" class="btn" type="button">Factory Reset (Wipe Pico + Browser)</button>
+    </div>
   </div>
 </div>
 
@@ -172,8 +207,6 @@
 
 <p style="color:#666;font-size:0.9rem;margin:0.6rem 0 0.8rem 0;">
   <span id="fw_meta_text"></span>
-  <span> | </span>
-  <a href="/wiring.shtml">Wiring</a>
 </p>
 
 <script>
@@ -186,7 +219,8 @@
       au: true, ad: true, al: true, ar: true
     };
     var ARCADE_SYNC_KEYS = [
-      "P1_LP", "P1_MP", "P1_HP", "P1_LK", "P1_MK", "P1_HK", "P1_START"
+      "P1_LP", "P1_MP", "P1_HP", "P1_LK", "P1_MK", "P1_HK", "P1_START",
+      "P2_LP", "P2_MP", "P2_HP", "P2_LK", "P2_MK", "P2_HK", "P2_START"
     ];
     var STORAGE_KEY = "jamma64_mapping_v1";
     var STORAGE_PORT_KEY = "jamma64_mapping_port_v1";
@@ -199,23 +233,29 @@
       P1_MK: "cd",
       P1_HK: "cr",
       P1_START: "start",
-      P2_LP: "a",
-      P2_MP: "b",
-      P2_HP: "z",
-      P2_LK: "cu",
-      P2_MK: "cd",
-      P2_HK: "cr",
-      P2_START: "start"
+      // Keep P2 unassigned by default to avoid unintended input injection.
+      // Assign these explicitly in the mapping UI when needed.
+      P2_LP: "",
+      P2_MP: "",
+      P2_HP: "",
+      P2_LK: "",
+      P2_MK: "",
+      P2_HK: "",
+      P2_START: ""
     };
     var CAPCOM_SVG_CANDIDATES = [
       "/img/capcom_2p_layout_lineart_hover.svg",
-      "/assets/capcom_2p_layout_lineart_hover.svg",
-      "/assets/capcom_2p_layout_lineart_hover.svgz",
-      "/img/capcom_2p_layout_lineart_hover.svgz"
+      "/assets/capcom_2p_layout_lineart_hover.svg"
     ];
 
     var slider = $("press_ms");
     var sliderValue = $("press_ms_value");
+    var tabBtnController = $("tab_btn_controller");
+    var tabBtnDigitalAnalog = $("tab_btn_digital_analog");
+    var tabBtnMappings = $("tab_btn_mappings");
+    var sectionController = $("section_controller");
+    var sectionDigitalAnalog = $("section_digital_analog");
+    var sectionMappings = $("section_mappings");
     var statusEl = $("press_status");
     var svgObj = $("controller_svg");
     var mappingStatusEl = $("mapping_status");
@@ -228,7 +268,6 @@
     var mappingProfilesSelectEl = $("mapping_profiles_select");
     var mappingProfilesRefreshBtn = $("mapping_profiles_refresh_btn");
     var mappingProfilesUseBtn = $("mapping_profiles_use_btn");
-    var mappingKeepOpen = $("mapping_keep_open");
     var fwMetaTextEl = $("fw_meta_text");
     var analogThrowSlider = $("analog_throw");
     var analogThrowValue = $("analog_throw_value");
@@ -253,6 +292,18 @@
     var p1StickMode = "dpad";
     var cachedProfileNames = [];
     var cachedActiveProfile = "";
+
+    function activateSection(which) {
+      var showController = which === "controller";
+      var showDigitalAnalog = which === "digital_analog";
+      var showMappings = which === "mappings";
+      sectionController.classList.toggle("active", showController);
+      sectionDigitalAnalog.classList.toggle("active", showDigitalAnalog);
+      sectionMappings.classList.toggle("active", showMappings);
+      tabBtnController.setAttribute("aria-pressed", showController ? "true" : "false");
+      tabBtnDigitalAnalog.setAttribute("aria-pressed", showDigitalAnalog ? "true" : "false");
+      tabBtnMappings.setAttribute("aria-pressed", showMappings ? "true" : "false");
+    }
 
     function currentMs() {
       var v = parseInt(slider.value, 10);
@@ -285,11 +336,22 @@
 
     function getArcadeKey(groupEl) {
       if (!groupEl) return "";
-      return groupEl.getAttribute("data-map") || groupEl.id || "";
+      var raw = groupEl.getAttribute("data-map") || groupEl.id || "";
+      if (!raw) return "";
+      if (raw === "p1-joy" || raw === "p2-joy") return raw;
+      var m = /^p([12])-([a-z0-9_]+)$/i.exec(raw);
+      if (m) return "P" + m[1] + "_" + String(m[2]).toUpperCase();
+      return String(raw).toUpperCase();
     }
 
     function isValidBtnCode(code) {
-      return !!VALID_N64_BTNS[String(code || "").toLowerCase()];
+      return !!VALID_N64_BTNS[canonicalBtnCode(code)];
+    }
+
+    function canonicalBtnCode(code) {
+      var b = String(code || "").toLowerCase();
+      if (!b) return "";
+      return b;
     }
 
     function isArcadeControlKey(key) {
@@ -305,7 +367,7 @@
       if (!raw || typeof raw !== "object") return out;
       Object.keys(raw).forEach(function (k) {
         if (!k) return;
-        var btn = String(raw[k] || "").toLowerCase();
+        var btn = canonicalBtnCode(raw[k]);
         if (isValidBtnCode(btn)) out[k] = btn;
       });
       return out;
@@ -519,8 +581,11 @@
       parts.push("throw=" + encodeURIComponent(currentThrow()));
       parts.push("diagpct=" + encodeURIComponent(currentDiagonalScale()));
       ARCADE_SYNC_KEYS.forEach(function (k) {
-        var v = (mapping[k] || "").toLowerCase();
-        if (!isValidBtnCode(v)) return;
+        var v = canonicalBtnCode(mapping[k]);
+        if (!isValidBtnCode(v)) {
+          parts.push(encodeURIComponent(k) + "=none");
+          return;
+        }
         parts.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
       });
       return parts.join("&");
@@ -572,7 +637,7 @@
     }
 
     function btnToLabel(btnCode) {
-      var b = String(btnCode || "").toLowerCase();
+      var b = canonicalBtnCode(btnCode);
       if (b === "a") return { text: "A" };
       if (b === "b") return { text: "B" };
       if (b === "start") return { text: "S" };
@@ -684,7 +749,7 @@
       var hitAreas = svgDoc.querySelectorAll("[data-btn]");
       if (!hitAreas || !hitAreas.length) return;
       hitAreas.forEach(function (el) {
-        var btn = (el.getAttribute("data-btn") || "").toLowerCase();
+        var btn = canonicalBtnCode(el.getAttribute("data-btn"));
         if (!isValidBtnCode(btn)) return;
         el.style.cursor = "pointer";
         el.addEventListener("click", function (ev) {
@@ -697,7 +762,7 @@
           updateArcadeLabels();
           setMappingStatus("Mapped " + selectedArcadeKey + " -> C" + selectedN64Port + ":" + btn + " (syncing)");
           pushMappingToDevice("apply", "");
-          if (!mappingKeepOpen.checked) closeModal();
+          closeModal();
         });
       });
       n64ModalWired = true;
@@ -952,7 +1017,25 @@
       ensureN64ModalLoaded();
     }
 
+    function applySectionFromHash() {
+      var h = String(window.location.hash || "").toLowerCase();
+      if (h === "#digital-analog" || h === "#digital_analog") {
+        activateSection("digital_analog");
+        return;
+      }
+      if (h === "#button-mappings" || h === "#mappings") {
+        activateSection("mappings");
+        return;
+      }
+      activateSection("controller");
+    }
+    window.addEventListener("hashchange", applySectionFromHash);
+    tabBtnController.addEventListener("click", function () { window.location.hash = "on-screen-controller"; });
+    tabBtnDigitalAnalog.addEventListener("click", function () { window.location.hash = "digital-analog"; });
+    tabBtnMappings.addEventListener("click", function () { window.location.hash = "button-mappings"; });
+
     function startUi() {
+      applySectionFromHash();
       loadMappings();
       loadMappingPorts();
       loadProfileListCache();

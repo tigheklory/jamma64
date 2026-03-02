@@ -18,8 +18,20 @@
 #ifndef JAMMA64_ENABLE_N64_DIAG
 #define JAMMA64_ENABLE_N64_DIAG 0
 #endif
+#ifndef JAMMA64_ENABLE_N64_DBG_TX
+#define JAMMA64_ENABLE_N64_DBG_TX 0
+#endif
+#ifndef JAMMA64_N64_DBG_TX_PIN
+#define JAMMA64_N64_DBG_TX_PIN 4
+#endif
 
 #define N64_DIAG_ENABLE JAMMA64_ENABLE_N64_DIAG
+#define N64_DBG_TX_ENABLE JAMMA64_ENABLE_N64_DBG_TX
+#define N64_DBG_TX_PIN JAMMA64_N64_DBG_TX_PIN
+
+#if N64_DBG_TX_ENABLE && (N64_DBG_TX_PIN == N64_P1_DATA_PIN)
+#error "N64 debug strobe pin must not match N64_P1_DATA_PIN"
+#endif
 
 #if N64_DIAG_ENABLE
 #define N64_DIAG_PRINTF(...) printf(__VA_ARGS__)
@@ -30,7 +42,6 @@
 #endif
 
 #define N64_P1_DATA_PIN 2
-#define N64_DBG_TX_PIN 3
 
 #define N64_PIO pio0
 #define N64_SM 0
@@ -192,25 +203,8 @@ static inline uint8_t clamp_analog_diagonal_safe(
   return neg ? (uint8_t)(256u - axis) : (uint8_t)axis;
 }
 
-static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
-  uint8_t phys = g_profile.map[out];
-  if (phys == 0xFFu || phys >= IN_COUNT) return false;
-  return inputs_get(in, (phys_in_t)phys);
-}
-
-static inline bool n64_out_pressed(inputs_t in, n64_out_t out) {
-  return n64_map_pressed(in, out) || n64_virtual_pressed(out);
-}
-
 static inline bool is_p1_joystick_phys(uint8_t phys) {
   return phys == IN_P1_UP || phys == IN_P1_DOWN || phys == IN_P1_LEFT || phys == IN_P1_RIGHT;
-}
-
-static inline bool n64_dir_pressed_nonjoy(inputs_t in, n64_out_t out) {
-  uint8_t phys = g_profile.map[out];
-  if (phys == 0xFFu || phys >= IN_COUNT) return false;
-  if (is_p1_joystick_phys(phys)) return false;
-  return inputs_get(in, (phys_in_t)phys);
 }
 
 static void n64_update_bootsel_test_mode(void) {
@@ -271,12 +265,21 @@ static void n64_apply_bootsel_test_override(uint8_t out[4]) {
 
 static void n64_build_p1_report(uint8_t out[4]) {
   inputs_t in = inputs_read();
+  bool mapped_pressed[N64_OUTPUT_COUNT] = {false};
+  bool mapped_pressed_nonjoy[N64_OUTPUT_COUNT] = {false};
+  for (uint8_t phys = 0; phys < IN_COUNT; phys++) {
+    if (!inputs_get(in, (phys_in_t)phys)) continue;
+    uint8_t map_out = g_profile.map[phys];
+    if (map_out == 0xFFu || map_out >= N64_OUTPUT_COUNT) continue;
+    mapped_pressed[map_out] = true;
+    if (!is_p1_joystick_phys(phys)) mapped_pressed_nonjoy[map_out] = true;
+  }
 
   uint8_t b0 = 0;
-  if (n64_out_pressed(in, N64_A))     b0 |= 0x80;
-  if (n64_out_pressed(in, N64_B))     b0 |= 0x40;
-  if (n64_out_pressed(in, N64_Z))     b0 |= 0x20;
-  if (n64_out_pressed(in, N64_START)) b0 |= 0x10;
+  if (mapped_pressed[N64_A] || n64_virtual_pressed(N64_A))     b0 |= 0x80;
+  if (mapped_pressed[N64_B] || n64_virtual_pressed(N64_B))     b0 |= 0x40;
+  if (mapped_pressed[N64_Z] || n64_virtual_pressed(N64_Z))     b0 |= 0x20;
+  if (mapped_pressed[N64_START] || n64_virtual_pressed(N64_START)) b0 |= 0x10;
 
   bool vdu = n64_virtual_dpad_pressed(N64_VDPAD_UP);
   bool vdd = n64_virtual_dpad_pressed(N64_VDPAD_DOWN);
@@ -288,18 +291,18 @@ static void n64_build_p1_report(uint8_t out[4]) {
   bool joy_left = inputs_get(in, IN_P1_LEFT);
   bool joy_right = inputs_get(in, IN_P1_RIGHT);
 
-  if (n64_dir_pressed_nonjoy(in, N64_DU) || vdu) b0 |= 0x08;
-  if (n64_dir_pressed_nonjoy(in, N64_DD) || vdd) b0 |= 0x04;
-  if (n64_dir_pressed_nonjoy(in, N64_DL) || vdl) b0 |= 0x02;
-  if (n64_dir_pressed_nonjoy(in, N64_DR) || vdr) b0 |= 0x01;
+  if (mapped_pressed_nonjoy[N64_DU] || vdu) b0 |= 0x08;
+  if (mapped_pressed_nonjoy[N64_DD] || vdd) b0 |= 0x04;
+  if (mapped_pressed_nonjoy[N64_DL] || vdl) b0 |= 0x02;
+  if (mapped_pressed_nonjoy[N64_DR] || vdr) b0 |= 0x01;
 
   uint8_t b1 = 0;
-  if (n64_out_pressed(in, N64_L))  b1 |= 0x20;
-  if (n64_out_pressed(in, N64_R))  b1 |= 0x10;
-  if (n64_out_pressed(in, N64_CU)) b1 |= 0x08;
-  if (n64_out_pressed(in, N64_CD)) b1 |= 0x04;
-  if (n64_out_pressed(in, N64_CL)) b1 |= 0x02;
-  if (n64_out_pressed(in, N64_CR)) b1 |= 0x01;
+  if (mapped_pressed[N64_L] || n64_virtual_pressed(N64_L))  b1 |= 0x20;
+  if (mapped_pressed[N64_R] || n64_virtual_pressed(N64_R))  b1 |= 0x10;
+  if (mapped_pressed[N64_CU] || n64_virtual_pressed(N64_CU)) b1 |= 0x08;
+  if (mapped_pressed[N64_CD] || n64_virtual_pressed(N64_CD)) b1 |= 0x04;
+  if (mapped_pressed[N64_CL] || n64_virtual_pressed(N64_CL)) b1 |= 0x02;
+  if (mapped_pressed[N64_CR] || n64_virtual_pressed(N64_CR)) b1 |= 0x01;
 
   bool su = n64_virtual_analog_pressed(N64_VANALOG_UP);
   bool sd = n64_virtual_analog_pressed(N64_VANALOG_DOWN);
@@ -310,10 +313,10 @@ static void n64_build_p1_report(uint8_t out[4]) {
 
   uint8_t sx = 0;
   uint8_t sy = 0;
-  su = su || n64_dir_pressed_nonjoy(in, N64_AU);
-  sd = sd || n64_dir_pressed_nonjoy(in, N64_AD);
-  sl = sl || n64_dir_pressed_nonjoy(in, N64_AL);
-  sr = sr || n64_dir_pressed_nonjoy(in, N64_AR);
+  su = su || mapped_pressed_nonjoy[N64_AU];
+  sd = sd || mapped_pressed_nonjoy[N64_AD];
+  sl = sl || mapped_pressed_nonjoy[N64_AL];
+  sr = sr || mapped_pressed_nonjoy[N64_AR];
 
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
     if (joy_up) b0 |= 0x08;
@@ -370,12 +373,12 @@ static uint32_t n64_pack_bits_lsb_first(const uint8_t *data, uint8_t len) {
 static void n64_send_packed(uint8_t bit_count, uint32_t packed) {
   if (bit_count == 0 || bit_count > 32) return;
 
-  #if N64_DIAG_ENABLE
-  // Optional scope strobe for timing debug; compiled out in normal builds.
+#if N64_DBG_TX_ENABLE
+  // Optional scope strobe for timing debug.
   gpio_put(N64_DBG_TX_PIN, 1);
   busy_wait_us_32(2u);
   gpio_put(N64_DBG_TX_PIN, 0);
-  #endif
+#endif
 
   pio_sm_put_blocking(N64_PIO, N64_SM, (uint32_t)(bit_count - 1u));
   pio_sm_put_blocking(N64_PIO, N64_SM, packed);
@@ -424,7 +427,7 @@ static void n64_handle_command(uint8_t cmd) {
 }
 
 bool n64_init(void) {
-#if N64_DIAG_ENABLE
+#if N64_DBG_TX_ENABLE
   gpio_init(N64_DBG_TX_PIN);
   gpio_set_dir(N64_DBG_TX_PIN, GPIO_OUT);
   gpio_put(N64_DBG_TX_PIN, 0);

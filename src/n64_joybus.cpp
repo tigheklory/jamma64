@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "pico/time.h"
 
@@ -15,12 +16,29 @@
 namespace {
 
 constexpr uint kN64DataPin = 2;
+#ifndef JAMMA64_ENABLE_N64_DBG_TX
+#define JAMMA64_ENABLE_N64_DBG_TX 0
+#endif
+#ifndef JAMMA64_N64_DBG_TX_PIN
+#define JAMMA64_N64_DBG_TX_PIN 4
+#endif
+constexpr bool kDbgTxEnable = (JAMMA64_ENABLE_N64_DBG_TX != 0);
+constexpr uint kDbgTxPin = static_cast<uint>(JAMMA64_N64_DBG_TX_PIN);
+static_assert(!(kDbgTxEnable && (kDbgTxPin == kN64DataPin)),
+              "N64 debug strobe pin must not match N64 data pin");
 constexpr uint64_t kReplyDelayUs = 0;
 constexpr uint64_t kRxTimeoutUs = 50;
 constexpr uint64_t kResetWaitUs = 50;
 
 joybus_port_t g_port{};
 bool g_port_ready = false;
+
+static inline void pulse_dbg_tx() {
+  if (!kDbgTxEnable) return;
+  gpio_put(kDbgTxPin, 1);
+  busy_wait_us_32(2u);
+  gpio_put(kDbgTxPin, 0);
+}
 
 static inline uint8_t clamp_u8_range(uint8_t v, uint8_t lo, uint8_t hi) {
   if (v < lo) return lo;
@@ -42,36 +60,28 @@ static inline uint8_t clamp_analog_diagonal_safe(
   return neg ? static_cast<uint8_t>(256u - axis) : static_cast<uint8_t>(axis);
 }
 
-static inline bool n64_map_pressed(inputs_t in, n64_out_t out) {
-  uint8_t phys = g_profile.map[out];
-  if (phys == 0xFFu || phys >= IN_COUNT) return false;
-  return inputs_get(in, static_cast<phys_in_t>(phys));
-}
-
-static inline bool n64_out_pressed(inputs_t in, n64_out_t out) {
-  return n64_map_pressed(in, out) || n64_virtual_pressed(out);
-}
-
 static inline bool is_p1_joystick_phys(uint8_t phys) {
   return phys == IN_P1_UP || phys == IN_P1_DOWN || phys == IN_P1_LEFT || phys == IN_P1_RIGHT;
-}
-
-static inline bool n64_dir_pressed_nonjoy(inputs_t in, n64_out_t out) {
-  uint8_t phys = g_profile.map[out];
-  if (phys == 0xFFu || phys >= IN_COUNT) return false;
-  if (is_p1_joystick_phys(phys)) return false;
-  return inputs_get(in, static_cast<phys_in_t>(phys));
 }
 
 static void build_report(n64_report_t *report) {
   std::memset(report, 0, sizeof(*report));
 
   inputs_t in = inputs_read();
+  bool mapped_pressed[N64_OUTPUT_COUNT] = {false};
+  bool mapped_pressed_nonjoy[N64_OUTPUT_COUNT] = {false};
+  for (uint8_t phys = 0; phys < IN_COUNT; phys++) {
+    if (!inputs_get(in, static_cast<phys_in_t>(phys))) continue;
+    uint8_t out = g_profile.map[phys];
+    if (out == 0xFFu || out >= N64_OUTPUT_COUNT) continue;
+    mapped_pressed[out] = true;
+    if (!is_p1_joystick_phys(phys)) mapped_pressed_nonjoy[out] = true;
+  }
 
-  report->a = n64_out_pressed(in, N64_A);
-  report->b = n64_out_pressed(in, N64_B);
-  report->z = n64_out_pressed(in, N64_Z);
-  report->start = n64_out_pressed(in, N64_START);
+  report->a = mapped_pressed[N64_A] || n64_virtual_pressed(N64_A);
+  report->b = mapped_pressed[N64_B] || n64_virtual_pressed(N64_B);
+  report->z = mapped_pressed[N64_Z] || n64_virtual_pressed(N64_Z);
+  report->start = mapped_pressed[N64_START] || n64_virtual_pressed(N64_START);
 
   bool vdu = n64_virtual_dpad_pressed(N64_VDPAD_UP);
   bool vdd = n64_virtual_dpad_pressed(N64_VDPAD_DOWN);
@@ -83,17 +93,17 @@ static void build_report(n64_report_t *report) {
   bool joy_left = inputs_get(in, IN_P1_LEFT);
   bool joy_right = inputs_get(in, IN_P1_RIGHT);
 
-  report->dpad_up = n64_dir_pressed_nonjoy(in, N64_DU) || vdu;
-  report->dpad_down = n64_dir_pressed_nonjoy(in, N64_DD) || vdd;
-  report->dpad_left = n64_dir_pressed_nonjoy(in, N64_DL) || vdl;
-  report->dpad_right = n64_dir_pressed_nonjoy(in, N64_DR) || vdr;
+  report->dpad_up = mapped_pressed_nonjoy[N64_DU] || vdu;
+  report->dpad_down = mapped_pressed_nonjoy[N64_DD] || vdd;
+  report->dpad_left = mapped_pressed_nonjoy[N64_DL] || vdl;
+  report->dpad_right = mapped_pressed_nonjoy[N64_DR] || vdr;
 
-  report->l = n64_out_pressed(in, N64_L);
-  report->r = n64_out_pressed(in, N64_R);
-  report->c_up = n64_out_pressed(in, N64_CU);
-  report->c_down = n64_out_pressed(in, N64_CD);
-  report->c_left = n64_out_pressed(in, N64_CL);
-  report->c_right = n64_out_pressed(in, N64_CR);
+  report->l = mapped_pressed[N64_L] || n64_virtual_pressed(N64_L);
+  report->r = mapped_pressed[N64_R] || n64_virtual_pressed(N64_R);
+  report->c_up = mapped_pressed[N64_CU] || n64_virtual_pressed(N64_CU);
+  report->c_down = mapped_pressed[N64_CD] || n64_virtual_pressed(N64_CD);
+  report->c_left = mapped_pressed[N64_CL] || n64_virtual_pressed(N64_CL);
+  report->c_right = mapped_pressed[N64_CR] || n64_virtual_pressed(N64_CR);
 
   uint8_t sx = 0;
   uint8_t sy = 0;
@@ -101,10 +111,10 @@ static void build_report(n64_report_t *report) {
   bool sd = n64_virtual_analog_pressed(N64_VANALOG_DOWN);
   bool sl = n64_virtual_analog_pressed(N64_VANALOG_LEFT);
   bool sr = n64_virtual_analog_pressed(N64_VANALOG_RIGHT);
-  su = su || n64_dir_pressed_nonjoy(in, N64_AU);
-  sd = sd || n64_dir_pressed_nonjoy(in, N64_AD);
-  sl = sl || n64_dir_pressed_nonjoy(in, N64_AL);
-  sr = sr || n64_dir_pressed_nonjoy(in, N64_AR);
+  su = su || mapped_pressed_nonjoy[N64_AU];
+  sd = sd || mapped_pressed_nonjoy[N64_AD];
+  sl = sl || mapped_pressed_nonjoy[N64_AL];
+  sr = sr || mapped_pressed_nonjoy[N64_AR];
 
   if (g_profile.p1_stick_mode == STICK_MODE_DPAD) {
     report->dpad_up = report->dpad_up || joy_up;
@@ -132,6 +142,11 @@ static void build_report(n64_report_t *report) {
 }  // namespace
 
 bool n64_init(void) {
+  if (kDbgTxEnable) {
+    gpio_init(kDbgTxPin);
+    gpio_set_dir(kDbgTxPin, GPIO_OUT);
+    gpio_put(kDbgTxPin, 0);
+  }
   if (!g_port_ready) {
     joybus_port_init(&g_port, kN64DataPin, pio0, -1, -1);
     g_port_ready = true;
@@ -153,6 +168,7 @@ void n64_task(void) {
     case N64Command::PROBE: {
       busy_wait_us(kReplyDelayUs);
       n64_status_t status = default_n64_status;
+      pulse_dbg_tx();
       joybus_send_bytes(&g_port, reinterpret_cast<uint8_t *>(&status), sizeof(status));
       break;
     }
@@ -160,6 +176,7 @@ void n64_task(void) {
       busy_wait_us(kReplyDelayUs);
       n64_report_t report{};
       build_report(&report);
+      pulse_dbg_tx();
       joybus_send_bytes(&g_port, reinterpret_cast<uint8_t *>(&report), sizeof(report));
       break;
     }

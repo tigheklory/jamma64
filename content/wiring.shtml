@@ -8,23 +8,39 @@
   <style>
     body { font-family: sans-serif; max-width: 980px; margin: 1rem auto; padding: 0 0.8rem; }
     .panel { border: 1px solid #ccc; border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; }
+    .top-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .top-tabs .btn.active { border-color: #3d7ac7; background: #e7f2ff; }
     .row { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
-    .btn { border: 1px solid #bbb; background: #f6f6f6; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; }
+    .btn { border: 1px solid #bbb; background: #f6f6f6; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 1rem; color: #111; text-decoration: none; display: inline-block; line-height: 1.2; }
+    a.btn:link, a.btn:visited, a.btn:hover, a.btn:active { color: #111; text-decoration: none; }
     .pinout-wrap {
       border: 1px solid #ddd;
       border-radius: 8px;
       background: #fff;
-      overflow: auto;
+      overflow: hidden;
     }
-    #pinout_root svg { width: 100%; height: auto; display: block; min-width: 760px; }
+    #pinout_root svg { width: 100%; max-width: 100%; height: auto; display: block; min-width: 0; }
     .hint { color: #555; }
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ddd; padding: 0.35rem 0.45rem; text-align: left; font-size: 0.92rem; }
     th { background: #f6f6f6; }
+    .pinout-table th, .pinout-table td { text-align: center; }
+    .pinout-table .edge { font-weight: 700; width: 6rem; }
+    .pinout-table .sig { text-align: left; }
+    .pinout-table .gpio { font-family: monospace; }
+    .pinout-title { text-align: center; margin: 0.2rem 0 0.8rem; }
+    .pinout-subtitle { text-align: center; margin: 1.1rem 0 0.4rem; }
   </style>
 </head>
 <body>
 <h2>JAMMA64 Wiring Reference</h2>
+
+<div class="top-tabs" role="tablist" aria-label="Pages">
+  <a class="btn" href="/index.shtml#on-screen-controller">On screen controller</a>
+  <a class="btn" href="/index.shtml#digital-analog">Digtal/Analog</a>
+  <a class="btn" href="/index.shtml#button-mappings">Button Mappings</a>
+  <a class="btn active" href="/wiring.shtml">Wiring</a>
+</div>
 
 <div class="panel">
   <div class="row">
@@ -49,7 +65,7 @@
   <h3>Active Project GPIO Map</h3>
   <table>
     <thead>
-      <tr><th>GPIO</th><th>Project</th><th>JAMMA</th><th>JAMMA/CPS2 Harness</th><th>Capcom Names</th><th>JAMMA Pin</th><th>CPS2 Pin</th><th>Notes</th></tr>
+      <tr><th>GPIO</th><th>Project</th><th>JAMMA</th><th>JAMMA/CPS2 Harness</th><th>Capcom Names</th><th>JAMMA Pin (Solder=letters, Parts=numbers)</th><th>CPS2 Pin</th><th>Notes</th></tr>
     </thead>
     <tbody id="pin_table_body"></tbody>
   </table>
@@ -65,6 +81,37 @@
   </table>
 </div>
 
+<div class="panel">
+  <h3 class="pinout-title">Capcom CPS II Pinout</h3>
+  <h4 class="pinout-subtitle">JAMMA connections</h4>
+  <table class="pinout-table">
+    <thead>
+      <tr>
+        <th class="edge">**</th>
+        <th class="sig">Solder Side</th>
+        <th class="edge"></th>
+        <th class="edge"></th>
+        <th class="sig">Parts Side</th>
+        <th class="edge">**</th>
+      </tr>
+    </thead>
+    <tbody id="jamma_pinout_table_body"></tbody>
+  </table>
+  <h4 class="pinout-subtitle">Auxiliary Cable (P/N 03-0052) Connections AKA Kick Harness</h4>
+  <table class="pinout-table">
+    <thead>
+      <tr>
+        <th class="sig">Connector Odd Row</th>
+        <th class="edge"></th>
+        <th class="edge"></th>
+        <th class="sig">Connector Even Row</th>
+      </tr>
+    </thead>
+    <tbody id="kick_pinout_table_body"></tbody>
+  </table>
+  <p class="hint">Buttons 4/5/6 are CPS2 kick-harness inputs, not JAMMA-standard button lines.</p>
+</div>
+
 <script>
   (function () {
     function $(id) { return document.getElementById(id); }
@@ -72,12 +119,15 @@
     var pinoutRootEl = $("pinout_root");
     var pinTableEl = $("pin_table_body");
     var passthroughTableEl = $("passthrough_table_body");
+    var jammaPinoutTableBodyEl = $("jamma_pinout_table_body");
+    var kickPinoutTableBodyEl = $("kick_pinout_table_body");
 
     var GPIO_TO_PROJECT = {
-      0: "P2_B6",
+      0: "P1_START",
       1: "P2_START",
       2: "N64_P1_DATA",
       3: "N64_P2_DATA",
+      5: "ALECK_RESET_OUT",
       6: "P1_UP",
       7: "P1_DOWN",
       8: "P1_LEFT",
@@ -88,16 +138,16 @@
       13: "P1_B4",
       14: "P1_B5",
       15: "P1_B6",
-      16: "P1_START",
-      17: "P2_B3",
+      16: "P2_B6",
+      17: "P2_B5",
       18: "P2_B4",
-      19: "P2_B5",
-      20: "P2_UP",
-      21: "P2_DOWN",
-      22: "P2_LEFT",
-      26: "P2_RIGHT",
-      27: "P2_B1",
-      28: "P2_B2"
+      19: "P2_B3",
+      20: "P2_B2",
+      21: "P2_B1",
+      22: "P2_RIGHT",
+      26: "P2_LEFT",
+      27: "P2_DOWN",
+      28: "P2_UP"
     };
 
     var PROJECT_TO_JAMMA = {
@@ -108,9 +158,9 @@
       P1_B1: "1P BTN1",
       P1_B2: "1P BTN2",
       P1_B3: "1P BTN3",
-      P1_B4: "1P BTN4",
-      P1_B5: "1P BTN5",
-      P1_B6: "1P BTN6",
+      P1_B4: "N/A (CPS2 kick)",
+      P1_B5: "N/A (CPS2 kick)",
+      P1_B6: "N/A (CPS2 kick)",
       P1_START: "1P START",
       P2_UP: "2P UP",
       P2_DOWN: "2P DOWN",
@@ -119,10 +169,11 @@
       P2_B1: "2P BTN1",
       P2_B2: "2P BTN2",
       P2_B3: "2P BTN3",
-      P2_B4: "2P BTN4",
-      P2_B5: "2P BTN5",
-      P2_B6: "2P BTN6",
+      P2_B4: "N/A (CPS2 kick)",
+      P2_B5: "N/A (CPS2 kick)",
+      P2_B6: "N/A (CPS2 kick)",
       P2_START: "2P START",
+      ALECK_RESET_OUT: "N/A",
       N64_P2_DATA: "N64 P2 DATA",
       N64_P1_DATA: "N64 P1 DATA"
     };
@@ -150,6 +201,7 @@
       P2_B5: "CPS2 KICK 2P K2",
       P2_B6: "CPS2 KICK 2P K3",
       P2_START: "JAMMA 2P START",
+      ALECK_RESET_OUT: "ALECK/N64 RESET CTRL (reserved)",
       N64_P2_DATA: "N64 PORT2 DATA",
       N64_P1_DATA: "N64 PORT1 DATA"
     };
@@ -178,28 +230,36 @@
       P2_B6: "P2 Hard Kick",
       P2_START: "P2 Start",
       COIN2: "Coin 2",
+      ALECK_RESET_OUT: "Aleck/N64 Reset Control",
       N64_P1_DATA: "N64 Port 1 Data",
       N64_P2_DATA: "N64 Port 2 Data"
     };
 
     var PROJECT_TO_JAMMA_PIN = {
-      P1_UP: "C22",
-      P1_DOWN: "C23",
-      P1_LEFT: "C24",
-      P1_RIGHT: "C25",
-      P1_B1: "C26",
-      P1_B2: "C27",
-      P1_B3: "C28",
-      P1_START: "C20",
-      P2_UP: "S22",
-      P2_DOWN: "S23",
-      P2_LEFT: "S24",
-      P2_RIGHT: "S25",
-      P2_B1: "S26",
-      P2_B2: "S27",
-      P2_B3: "S28",
-      P2_START: "S21",
-      COIN2: "C19",
+      P1_UP: "18",
+      P1_DOWN: "19",
+      P1_LEFT: "20",
+      P1_RIGHT: "21",
+      P1_B1: "22",
+      P1_B2: "23",
+      P1_B3: "24",
+      P1_B4: "-",
+      P1_B5: "-",
+      P1_B6: "-",
+      P1_START: "17",
+      P2_UP: "V",
+      P2_DOWN: "W",
+      P2_LEFT: "X",
+      P2_RIGHT: "Y",
+      P2_B1: "Z",
+      P2_B2: "A",
+      P2_B3: "B",
+      P2_B4: "-",
+      P2_B5: "-",
+      P2_B6: "-",
+      P2_START: "U",
+      COIN2: "T",
+      ALECK_RESET_OUT: "-",
       N64_P1_DATA: "-",
       N64_P2_DATA: "-"
     };
@@ -218,6 +278,57 @@
       { jamma: "COIN2", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
       { jamma: "SERVICE", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" },
       { jamma: "TEST", route: "JAMMA edge -> Aleck 64", note: "Not sampled by Pico" }
+    ];
+
+    var JAMMA_ROWS = [
+      { sExtra: "", sSig: "GND", sPin: "A", pPin: "1", pSig: "GND", pExtra: "" },
+      { sExtra: "", sSig: "GND", sPin: "B", pPin: "2", pSig: "GND", pExtra: "" },
+      { sExtra: "", sSig: "+5V", sPin: "C", pPin: "3", pSig: "+5V", pExtra: "" },
+      { sExtra: "", sSig: "+5V", sPin: "D", pPin: "4", pSig: "+5V", pExtra: "" },
+      { sExtra: "", sSig: "-5V", sPin: "E", pPin: "5", pSig: "-5V", pExtra: "" },
+      { sExtra: "", sSig: "+12V", sPin: "F", pPin: "6", pSig: "+12V", pExtra: "" },
+      { sExtra: "", sSig: "KEY, NO PIN", sPin: "H", pPin: "7", pSig: "KEY, NO PIN", pExtra: "" },
+      { sExtra: "", sSig: "COIN COUNTER 2", sPin: "J", pPin: "8", pSig: "COIN COUNTER 1", pExtra: "" },
+      { sExtra: "", sSig: "COIN LOCKOUT 2", sPin: "K", pPin: "9", pSig: "COIN LOCKOUT 1", pExtra: "" },
+      { sExtra: "", sSig: "SPEAKER (-)", sPin: "L", pPin: "10", pSig: "SPEAKER (+)", pExtra: "" },
+      { sExtra: "", sSig: "NC", sPin: "M", pPin: "11", pSig: "NC", pExtra: "" },
+      { sExtra: "", sSig: "VIDEO ANALOG GREEN", sPin: "N", pPin: "12", pSig: "VIDEO ANALOG RED", pExtra: "" },
+      { sExtra: "", sSig: "VIDEO COMPOSITE SYNC", sPin: "P", pPin: "13", pSig: "VIDEO ANALOG BLUE", pExtra: "" },
+      { sExtra: "", sSig: "SERVICE SWITCH", sPin: "R", pPin: "14", pSig: "VIDEO GROUND", pExtra: "" },
+      { sExtra: "", sSig: "TILT/SLAM", sPin: "S", pPin: "15", pSig: "TEST", pExtra: "" },
+      { sExtra: "", sSig: "COIN B", sPin: "T", pPin: "16", pSig: "COIN A", pExtra: "" },
+      { sExtra: "", sSig: "2P START", sPin: "U", pPin: "17", pSig: "1P START", pExtra: "" },
+      { sExtra: "", sSig: "2P UP", sPin: "V", pPin: "18", pSig: "1P UP", pExtra: "" },
+      { sExtra: "", sSig: "2P DOWN", sPin: "W", pPin: "19", pSig: "1P DOWN", pExtra: "" },
+      { sExtra: "", sSig: "2P LEFT", sPin: "X", pPin: "20", pSig: "1P LEFT", pExtra: "" },
+      { sExtra: "", sSig: "2P RIGHT", sPin: "Y", pPin: "21", pSig: "1P RIGHT", pExtra: "" },
+      { sExtra: "Light Punch", sSig: "2P BUTTON 1", sPin: "Z", pPin: "22", pSig: "1P BUTTON 1", pExtra: "Light Punch" },
+      { sExtra: "Medium Punch", sSig: "2P BUTTON 2", sPin: "A", pPin: "23", pSig: "1P BUTTON 2", pExtra: "Medium Punch" },
+      { sExtra: "Heavy Punch", sSig: "2P BUTTON 3", sPin: "B", pPin: "24", pSig: "1P BUTTON 3", pExtra: "Heavy Punch" },
+      { sExtra: "", sSig: "N/C", sPin: "C", pPin: "25", pSig: "N/C", pExtra: "" },
+      { sExtra: "", sSig: "N/C", sPin: "D", pPin: "26", pSig: "N/C", pExtra: "" },
+      { sExtra: "", sSig: "GND", sPin: "E", pPin: "27", pSig: "GND", pExtra: "" },
+      { sExtra: "", sSig: "GND", sPin: "F", pPin: "28", pSig: "GND", pExtra: "" }
+    ];
+
+    var KICK_ROWS = [
+      { oddSig: "NC", oddPin: "1", evenPin: "2", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "3", evenPin: "4", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "5", evenPin: "6", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "7", evenPin: "8", evenSig: "NC" },
+      { oddSig: "Player 2 Heavy Kick", oddPin: "9", evenPin: "10", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "11", evenPin: "12", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "13", evenPin: "14", evenSig: "NC" },
+      { oddSig: "Player 1 Heavy Kick", oddPin: "15", evenPin: "16", evenSig: "NC" },
+      { oddSig: "Player 1 Medium Kick", oddPin: "17", evenPin: "18", evenSig: "NC" },
+      { oddSig: "Player 1 Light Kick", oddPin: "19", evenPin: "20", evenSig: "NC" },
+      { oddSig: "Player 2 Light Kick", oddPin: "21", evenPin: "22", evenSig: "NC" },
+      { oddSig: "Player 2 Medium Kick", oddPin: "23", evenPin: "24", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "25", evenPin: "26", evenSig: "NC" },
+      { oddSig: "NC", oddPin: "27", evenPin: "28", evenSig: "NC" },
+      { oddSig: "Test Brkt- Volume Up", oddPin: "29", evenPin: "30", evenSig: "Test Brkt- Volume Down" },
+      { oddSig: "Test Brkt - GND", oddPin: "31", evenPin: "32", evenSig: "NC" },
+      { oddSig: "Player 2 Kick - GND", oddPin: "33", evenPin: "34", evenSig: "Player 1 Kick - GND" }
     ];
 
     var pinTextNodes = [];
@@ -262,14 +373,25 @@
       pinTextNodes = [];
       gpioByPinId = {};
       baseLabelByPinId = {};
-      var nodes = svgEl.querySelectorAll("g#text_labels text[id^='pin']");
-      nodes.forEach(function (node) {
-        var id = node.id || "";
-        var t = String(node.textContent || "").trim();
+      var seen = {};
+      function addPinNode(pinId, textNode) {
+        var id = String(pinId || "");
+        if (!id || !textNode || seen[id]) return;
+        var t = String(textNode.textContent || "").trim();
+        if (!t) return;
+        seen[id] = true;
         baseLabelByPinId[id] = t;
         var m = /^GP(\d+)$/i.exec(t);
         if (m) gpioByPinId[id] = parseInt(m[1], 10);
-        pinTextNodes.push(node);
+        pinTextNodes.push(textNode);
+      }
+      svgEl.querySelectorAll("text[id^='pin']").forEach(function (textNode) {
+        addPinNode(textNode.id, textNode);
+      });
+      svgEl.querySelectorAll("[id^='pin']").forEach(function (el) {
+        if (el.tagName && el.tagName.toLowerCase() === "text") return;
+        var t = el.querySelector("text");
+        addPinNode(el.id, t);
       });
     }
 
@@ -305,6 +427,7 @@
       addSection("Core");
       addRow(2, "N64_P1_DATA", "Joybus data line");
       addRow(3, "N64_P2_DATA", "Reserved for future Joybus P2 output");
+      addRow(5, "ALECK_RESET_OUT", "Reserved for future Aleck/N64 reset control");
 
       addSection("Player 1");
       addRow(6, "P1_UP", "JAMMA input");
@@ -317,19 +440,19 @@
       addRow(13, "P1_B4", "CPS2 kick harness input");
       addRow(14, "P1_B5", "CPS2 kick harness input");
       addRow(15, "P1_B6", "CPS2 kick harness input");
-      addRow(16, "P1_START", "JAMMA input");
+      addRow(0, "P1_START", "JAMMA input");
 
       addSection("Player 2");
-      addRow(20, "P2_UP", "JAMMA input");
-      addRow(21, "P2_DOWN", "JAMMA input");
-      addRow(22, "P2_LEFT", "JAMMA input");
-      addRow(26, "P2_RIGHT", "JAMMA input");
-      addRow(27, "P2_B1", "JAMMA input");
-      addRow(28, "P2_B2", "JAMMA input");
-      addRow(17, "P2_B3", "JAMMA input");
+      addRow(28, "P2_UP", "JAMMA input");
+      addRow(27, "P2_DOWN", "JAMMA input");
+      addRow(26, "P2_LEFT", "JAMMA input");
+      addRow(22, "P2_RIGHT", "JAMMA input");
+      addRow(21, "P2_B1", "JAMMA input");
+      addRow(20, "P2_B2", "JAMMA input");
+      addRow(19, "P2_B3", "JAMMA input");
       addRow(18, "P2_B4", "CPS2 kick harness input");
-      addRow(19, "P2_B5", "CPS2 kick harness input");
-      addRow(0, "P2_B6", "CPS2 kick harness input");
+      addRow(17, "P2_B5", "CPS2 kick harness input");
+      addRow(16, "P2_B6", "CPS2 kick harness input");
       addRow(1, "P2_START", "JAMMA input");
 
     }
@@ -343,27 +466,84 @@
       });
     }
 
+    function renderJammaPinoutTable() {
+      jammaPinoutTableBodyEl.innerHTML = "";
+      JAMMA_ROWS.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td class='edge'>" + r.sExtra + "</td>" +
+          "<td class='sig'>" + r.sSig + "</td>" +
+          "<td class='edge'>" + r.sPin + "</td>" +
+          "<td class='edge'>" + r.pPin + "</td>" +
+          "<td class='sig'>" + r.pSig + "</td>" +
+          "<td class='edge'>" + r.pExtra + "</td>";
+        jammaPinoutTableBodyEl.appendChild(tr);
+      });
+    }
+
+    function renderKickPinoutTable() {
+      kickPinoutTableBodyEl.innerHTML = "";
+      KICK_ROWS.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td class='sig'>" + r.oddSig + "</td>" +
+          "<td class='edge'>" + r.oddPin + "</td>" +
+          "<td class='edge'>" + r.evenPin + "</td>" +
+          "<td class='sig'>" + r.evenSig + "</td>";
+        kickPinoutTableBodyEl.appendChild(tr);
+      });
+    }
+
     modeEl.addEventListener("change", applyMode);
 
-    fetch("/img/pico_2w_pinout_text_labels.svg", { cache: "no-store" })
-      .then(function (resp) {
-        if (!resp.ok) throw new Error("missing svg");
-        return resp.text();
-      })
-      .then(function (svgText) {
-        var svgEl = parsePinoutSvg(svgText);
-        if (!svgEl) throw new Error("invalid svg");
-        pinoutRootEl.innerHTML = "";
-        pinoutRootEl.appendChild(svgEl);
-        wirePinText(svgEl);
-        applyMode();
-      })
-      .catch(function () {
-        pinoutRootEl.textContent = "Could not load pinout SVG.";
-      });
+    function fetchApiVersion() {
+      return fetch("/api.shtml", { cache: "no-store" })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("api unavailable");
+          return resp.json();
+        })
+        .then(function (data) {
+          var fw = String((data && data.fw) || "").trim();
+          var build = String((data && data.build) || "").trim();
+          if (!fw || !build) return "";
+          // Sanitize for query-string safety and avoid accidental cache key bloat.
+          return (fw + "-" + build).replace(/[^a-zA-Z0-9._-]/g, "_");
+        })
+        .catch(function () {
+          return "";
+        });
+    }
+
+    function loadPinoutSvg() {
+      fetchApiVersion()
+        .then(function (versionKey) {
+          var svgUrl = "/img/pico_2w_pinout_text_large_labels.svg";
+          if (versionKey) svgUrl += "?v=" + encodeURIComponent(versionKey);
+          return fetch(svgUrl, { cache: "default" });
+        })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("missing svg");
+          return resp.text();
+        })
+        .then(function (svgText) {
+          var svgEl = parsePinoutSvg(svgText);
+          if (!svgEl) throw new Error("invalid svg");
+          pinoutRootEl.innerHTML = "";
+          pinoutRootEl.appendChild(svgEl);
+          wirePinText(svgEl);
+          applyMode();
+        })
+        .catch(function () {
+          pinoutRootEl.textContent = "Could not load pinout SVG.";
+        });
+    }
+
+    loadPinoutSvg();
 
     renderPinTable();
     renderPassthroughTable();
+    renderJammaPinoutTable();
+    renderKickPinoutTable();
   })();
 </script>
 </body>

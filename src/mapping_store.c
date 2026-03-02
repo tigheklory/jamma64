@@ -10,7 +10,7 @@
 #include "profile.h"
 
 #define MAP_STORE_MAGIC 0x4D415036u
-#define MAP_STORE_VERSION 4u
+#define MAP_STORE_VERSION 5u
 #define MAP_STORE_FW_TAG_MAX 23u
 
 #define MAP_STORE_SECTOR_SIZE 4096u
@@ -232,7 +232,7 @@ size_t mapping_store_export_json(char *out, size_t out_max) {
     }
     used += (size_t)n;
 
-    for (int m = 0; m < N64_OUTPUT_COUNT; m++) {
+    for (int m = 0; m < IN_COUNT; m++) {
       n = snprintf(out + used, out_max - used, "%s%u", (m == 0 ? "" : ","), (unsigned)p->map[m]);
       if (n < 0 || (size_t)n >= (out_max - used)) {
         out[0] = '\0';

@@ -18,7 +18,7 @@ static const uint8_t pin_for_input[IN_COUNT] = {
   [IN_P1_B5] = 14,
   [IN_P1_B6] = 15,
 
-  [IN_P1_START] = 16,
+  [IN_P1_START] = 0,
   // Coin/service/test are intentionally not read by Pico now.
   // Wire these straight through to Aleck 64.
   [IN_COIN1]    = PIN_UNUSED,
@@ -26,17 +26,17 @@ static const uint8_t pin_for_input[IN_COUNT] = {
   [IN_TEST]     = PIN_UNUSED,
 
   // P2 placeholders (set once wired)
-  [IN_P2_UP]    = 20,
-  [IN_P2_DOWN]  = 21,
-  [IN_P2_LEFT]  = 22,
-  [IN_P2_RIGHT] = 26,
+  [IN_P2_UP]    = 28,
+  [IN_P2_DOWN]  = 27,
+  [IN_P2_LEFT]  = 26,
+  [IN_P2_RIGHT] = 22,
 
-  [IN_P2_B1] = 27,
-  [IN_P2_B2] = 28,
-  [IN_P2_B3] = 17,
+  [IN_P2_B1] = 21,
+  [IN_P2_B2] = 20,
+  [IN_P2_B3] = 19,
   [IN_P2_B4] = 18,
-  [IN_P2_B5] = 19,
-  [IN_P2_B6] = 0,
+  [IN_P2_B5] = 17,
+  [IN_P2_B6] = 16,
 
   [IN_P2_START] = 1,
   [IN_COIN2]    = PIN_UNUSED,

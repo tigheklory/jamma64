@@ -47,6 +47,10 @@
 #define LWIP_HTTPD_SSI_MULTIPART   1
 #define LWIP_HTTPD_SUPPORT_POST    0
 #define LWIP_HTTPD_SSI_INCLUDE_TAG 0
+// map.cgi sends many query params (mode/throw/diag + P1/P2 mapping keys).
+#define LWIP_HTTPD_MAX_CGI_PARAMETERS 32
+// /api.shtml injects JSON via SSI; keep this large enough to avoid truncation.
+#define LWIP_HTTPD_MAX_TAG_INSERT_LEN 1024
 
 // Generated file containing html data
 #define HTTPD_FSDATA_FILE          "pico_fsdata.inc"

@@ -1,7 +1,9 @@
 param(
   [string]$Uf2Path = (Join-Path $PSScriptRoot "..\build\jamma64.uf2"),
-  [Parameter(Mandatory = $true)][string]$Ssid,
-  [Parameter(Mandatory = $true)][string]$Password,
+  # Built-in defaults for unattended shortcut usage.
+  # Replace these with your real credentials if desired.
+  [string]$Ssid = "CHANGE_ME_SSID",
+  [string]$Password = "CHANGE_ME_PASSWORD",
   [Parameter(Mandatory = $true)][string]$BootselDrive,
   [Parameter(Mandatory = $true)][string]$RuntimeDrive,
   [int]$TimeoutSec = 120,
@@ -69,6 +71,11 @@ function Wait-ForRuntime {
 
 if (-not (Test-Path -LiteralPath $Uf2Path)) {
   throw "UF2 not found: $Uf2Path"
+}
+
+if ([string]::IsNullOrWhiteSpace($Ssid) -or [string]::IsNullOrWhiteSpace($Password) -or
+    $Ssid -eq "CHANGE_ME_SSID" -or $Password -eq "CHANGE_ME_PASSWORD") {
+  throw "Set built-in Ssid/Password defaults in flash_and_wifi.ps1 or pass -Ssid/-Password explicitly."
 }
 
 $BootselRoot = Drive-Root $BootselDrive

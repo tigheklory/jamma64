@@ -4,7 +4,7 @@
    data-name="Layer 1"
    viewBox="0 0 250 333.33333"
    version="1.1"
-   sodipodi:docname="pico_2w_pinout_text_labels.svg"
+   sodipodi:docname="pico_2w_pinout_text_large_labels.svg"
    inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
    width="300"
    height="400"
@@ -21,15 +21,37 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.0829312"
-     inkscape:cx="149.59398"
-     inkscape:cy="202.22891"
-     inkscape:window-width="1706"
-     inkscape:window-height="1354"
-     inkscape:window-x="3399"
-     inkscape:window-y="0"
+     inkscape:zoom="2.1658624"
+     inkscape:cx="-55.174327"
+     inkscape:cy="139.20552"
+     inkscape:window-width="3761"
+     inkscape:window-height="1317"
+     inkscape:window-x="1331"
+     inkscape:window-y="37"
      inkscape:window-maximized="0"
-     inkscape:current-layer="g1" />
+     inkscape:current-layer="text_labels"
+     showguides="true">
+    <sodipodi:guide
+       position="4.2323403,154.03601"
+       orientation="1,0"
+       id="guide1"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="245.66812,202.51554"
+       orientation="1,0"
+       id="guide2"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="31.165415,172.11964"
+       orientation="1,0"
+       id="guide3"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="218.73504,176.54436"
+       orientation="1,0"
+       id="guide4"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
   <defs
      id="defs1">
     <style
@@ -1030,7 +1052,7 @@
          id="path139" />
       <polygon
          class="cls-13"
-         points="262.35,194.19 262.35,191.94 262.71,191.94 262.71,192.86 265.57,192.86 265.57,193.27 262.71,193.27 262.71,194.19 "
+         points="262.71,191.94 262.71,192.86 265.57,192.86 265.57,193.27 262.71,193.27 262.71,194.19 262.35,194.19 262.35,191.94 "
          id="polygon139" />
       <path
          class="cls-13"
@@ -1038,11 +1060,11 @@
          id="path140" />
       <polygon
          class="cls-13"
-         points="262.71,187.49 262.71,188.75 263.71,188.75 263.71,187.57 264.06,187.57 264.06,188.75 265.21,188.75 265.21,187.49 265.57,187.49 265.57,189.16 262.35,189.16 262.35,187.49 "
+         points="263.71,188.75 263.71,187.57 264.06,187.57 264.06,188.75 265.21,188.75 265.21,187.49 265.57,187.49 265.57,189.16 262.35,189.16 262.35,187.49 262.71,187.49 262.71,188.75 "
          id="polygon140" />
       <polygon
          class="cls-13"
-         points="265.21,185.1 265.57,185.1 265.57,186.78 262.35,186.78 262.35,186.37 265.21,186.37 "
+         points="265.57,186.78 262.35,186.78 262.35,186.37 265.21,186.37 265.21,185.1 265.57,185.1 "
          id="polygon141" />
       <path
          class="cls-13"
@@ -1150,7 +1172,7 @@
          id="path166" />
       <polygon
          class="cls-13"
-         points="296.1,251.45 295.09,251.45 295.09,252.25 296.03,252.25 296.03,252.53 295.09,252.53 295.09,253.45 296.1,253.45 296.1,253.74 294.76,253.74 294.76,251.16 296.1,251.16 "
+         points="295.09,252.25 296.03,252.25 296.03,252.53 295.09,252.53 295.09,253.45 296.1,253.45 296.1,253.74 294.76,253.74 294.76,251.16 296.1,251.16 296.1,251.45 295.09,251.45 "
          id="polygon166" />
       <path
          class="cls-13"
@@ -1166,11 +1188,11 @@
          id="path169" />
       <polygon
          class="cls-13"
-         points="261.42,171.39 261.42,171.68 260.08,171.68 260.08,169.1 260.41,169.1 260.41,171.39 "
+         points="260.08,171.68 260.08,169.1 260.41,169.1 260.41,171.39 261.42,171.39 261.42,171.68 "
          id="polygon169" />
       <polygon
          class="cls-13"
-         points="264.09,169.39 263.08,169.39 263.08,170.19 264.02,170.19 264.02,170.48 263.08,170.48 263.08,171.39 264.09,171.39 264.09,171.68 262.75,171.68 262.75,169.1 264.09,169.1 "
+         points="263.08,170.19 264.02,170.19 264.02,170.48 263.08,170.48 263.08,171.39 264.09,171.39 264.09,171.68 262.75,171.68 262.75,169.1 264.09,169.1 264.09,169.39 263.08,169.39 "
          id="polygon170" />
       <path
          class="cls-13"
@@ -1957,7 +1979,7 @@
          id="rect356" />
       <polygon
          class="cls-7"
-         points="239.66,152.44 239.64,156.1 238.93,156.1 238.93,153.3 238.24,153.58 238.24,152.98 239.57,152.44 "
+         points="238.93,156.1 238.93,153.3 238.24,153.58 238.24,152.98 239.57,152.44 239.66,152.44 239.64,156.1 "
          id="polygon356" />
       <rect
          class="cls-33"
@@ -2023,7 +2045,7 @@
          id="rect362" />
       <polygon
          class="cls-7"
-         points="240.22,208.21 240.22,208.62 239.06,211.88 238.3,211.88 239.46,208.81 238,208.81 238,208.21 "
+         points="239.06,211.88 238.3,211.88 239.46,208.81 238,208.81 238,208.21 240.22,208.21 240.22,208.62 "
          id="polygon362" />
       <rect
          class="cls-33"
@@ -2056,7 +2078,7 @@
          id="rect365" />
       <polygon
          class="cls-7"
-         points="238.41,236.08 238.39,239.73 237.68,239.73 237.68,236.94 236.99,237.22 236.99,236.62 238.32,236.08 "
+         points="237.68,239.73 237.68,236.94 236.99,237.22 236.99,236.62 238.32,236.08 238.41,236.08 238.39,239.73 "
          id="polygon365" />
       <path
          class="cls-7"
@@ -2071,11 +2093,11 @@
          id="rect366" />
       <polygon
          class="cls-7"
-         points="238.41,245.36 238.39,249.02 237.68,249.02 237.68,246.22 236.99,246.5 236.99,245.9 238.32,245.36 "
+         points="237.68,249.02 237.68,246.22 236.99,246.5 236.99,245.9 238.32,245.36 238.41,245.36 238.39,249.02 "
          id="polygon366" />
       <polygon
          class="cls-7"
-         points="240.9,245.36 240.88,249.02 240.17,249.02 240.17,246.22 239.49,246.5 239.49,245.9 240.82,245.36 "
+         points="240.17,249.02 240.17,246.22 239.49,246.5 239.49,245.9 240.82,245.36 240.9,245.36 240.88,249.02 "
          id="polygon367" />
       <rect
          class="cls-33"
@@ -2086,7 +2108,7 @@
          id="rect367" />
       <polygon
          class="cls-7"
-         points="238.41,254.65 238.39,258.3 237.68,258.3 237.68,255.51 236.99,255.79 236.99,255.18 238.32,254.65 "
+         points="237.68,258.3 237.68,255.51 236.99,255.79 236.99,255.18 238.32,254.65 238.41,254.65 238.39,258.3 "
          id="polygon368" />
       <path
          class="cls-7"
@@ -2101,7 +2123,7 @@
          id="rect368" />
       <polygon
          class="cls-7"
-         points="238.41,263.93 238.39,267.58 237.68,267.58 237.68,264.79 236.99,265.07 236.99,264.47 238.32,263.93 "
+         points="237.68,267.58 237.68,264.79 236.99,265.07 236.99,264.47 238.32,263.93 238.41,263.93 238.39,267.58 "
          id="polygon369" />
       <path
          class="cls-7"
@@ -2116,7 +2138,7 @@
          id="rect369" />
       <polygon
          class="cls-7"
-         points="238.41,273.21 238.39,276.87 237.68,276.87 237.68,274.07 236.99,274.35 236.99,273.75 238.32,273.21 "
+         points="237.68,276.87 237.68,274.07 236.99,274.35 236.99,273.75 238.32,273.21 238.41,273.21 238.39,276.87 "
          id="polygon370" />
       <path
          class="cls-7"
@@ -2131,7 +2153,7 @@
          id="rect370" />
       <polygon
          class="cls-7"
-         points="238.41,282.5 238.39,286.15 237.68,286.15 237.68,283.36 236.99,283.64 236.99,283.03 238.32,282.5 "
+         points="237.68,286.15 237.68,283.36 236.99,283.64 236.99,283.03 238.32,282.5 238.41,282.5 238.39,286.15 "
          id="polygon371" />
       <path
          class="cls-7"
@@ -2146,7 +2168,7 @@
          id="rect371" />
       <polygon
          class="cls-7"
-         points="238.41,291.72 238.39,295.37 237.68,295.37 237.68,292.58 236.99,292.86 236.99,292.25 238.32,291.72 "
+         points="237.68,295.37 237.68,292.58 236.99,292.86 236.99,292.25 238.32,291.72 238.41,291.72 238.39,295.37 "
          id="polygon372" />
       <path
          class="cls-7"
@@ -2161,11 +2183,11 @@
          id="rect372" />
       <polygon
          class="cls-7"
-         points="238.41,301 238.39,304.65 237.68,304.65 237.68,301.86 236.99,302.14 236.99,301.54 238.32,301 "
+         points="237.68,304.65 237.68,301.86 236.99,302.14 236.99,301.54 238.32,301 238.41,301 238.39,304.65 "
          id="polygon373" />
       <polygon
          class="cls-7"
-         points="241.46,300.98 241.46,301.39 240.3,304.65 239.55,304.65 240.71,301.58 239.25,301.58 239.25,300.98 "
+         points="240.3,304.65 239.55,304.65 240.71,301.58 239.25,301.58 239.25,300.98 241.46,300.98 241.46,301.39 "
          id="polygon374" />
       <rect
          class="cls-33"
@@ -2176,7 +2198,7 @@
          id="rect374" />
       <polygon
          class="cls-7"
-         points="238.41,310.28 238.39,313.94 237.68,313.94 237.68,311.14 236.99,311.42 236.99,310.82 238.32,310.28 "
+         points="237.68,313.94 237.68,311.14 236.99,311.42 236.99,310.82 238.32,310.28 238.41,310.28 238.39,313.94 "
          id="polygon375" />
       <path
          class="cls-7"
@@ -2191,7 +2213,7 @@
          id="rect375" />
       <polygon
          class="cls-7"
-         points="238.41,319.57 238.39,323.22 237.68,323.22 237.68,320.43 236.99,320.71 236.99,320.1 238.32,319.57 "
+         points="237.68,323.22 237.68,320.43 236.99,320.71 236.99,320.1 238.32,319.57 238.41,319.57 238.39,323.22 "
          id="polygon376" />
       <path
          class="cls-7"
@@ -2270,7 +2292,7 @@
          id="path385" />
       <polygon
          class="cls-7"
-         points="333.27,180.29 333.27,180.7 332.11,183.97 331.35,183.97 332.51,180.9 331.05,180.9 331.05,180.29 "
+         points="332.11,183.97 331.35,183.97 332.51,180.9 331.05,180.9 331.05,180.29 333.27,180.29 333.27,180.7 "
          id="polygon385" />
       <rect
          class="cls-33"
@@ -2360,7 +2382,7 @@
          id="path396" />
       <polygon
          class="cls-7"
-         points="332.69,236.02 332.66,239.67 331.95,239.67 331.95,236.88 331.27,237.15 331.27,236.55 332.6,236.02 "
+         points="331.95,239.67 331.95,236.88 331.27,237.15 331.27,236.55 332.6,236.02 332.69,236.02 332.66,239.67 "
          id="polygon396" />
       <rect
          class="cls-33"
@@ -2420,7 +2442,7 @@
          id="path403" />
       <polygon
          class="cls-7"
-         points="333.27,273.13 333.27,273.54 332.11,276.8 331.35,276.8 332.51,273.73 331.05,273.73 331.05,273.13 "
+         points="332.11,276.8 331.35,276.8 332.51,273.73 331.05,273.73 331.05,273.13 333.27,273.13 333.27,273.54 "
          id="polygon403" />
       <rect
          class="cls-33"
@@ -2510,232 +2532,264 @@
          id="path414" />
       <polygon
          class="cls-7"
-         points="332.69,328.85 332.66,332.5 331.95,332.5 331.95,329.71 331.27,329.99 331.27,329.39 332.6,328.85 "
+         points="331.95,332.5 331.95,329.71 331.27,329.99 331.27,329.39 332.6,328.85 332.69,328.85 332.66,332.5 "
          id="polygon414" />
       <rect
          class="cls-29"
-         x="335.95001"
+         x="335.9595"
          y="150.98"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect414" />
+         id="rect414"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-29"
-         x="335.95001"
+         x="335.9595"
          y="160.27"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect417" />
+         id="rect417"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-29"
-         x="335.95001"
+         x="335.9595"
          y="188.12"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect419" />
+         id="rect419"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-20"
          x="335.93103"
          y="197.39999"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect439" />
+         id="rect439"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-1"
-         x="335.95001"
+         x="335.9595"
          y="178.83"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect444" />
+         id="rect444"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-1"
-         x="335.95001"
+         x="335.9595"
          y="243.82001"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect447" />
+         id="rect447"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="150.98"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect699" />
+         id="rect699"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="160.27"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect701" />
+         id="rect701"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="178.83"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect703" />
+         id="rect703"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="188.12"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect706" />
+         id="rect706"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="197.39999"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect709" />
+         id="rect709"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="206.67999"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect712" />
+         id="rect712"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="225.25"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect715" />
+         id="rect715"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="234.53"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect718" />
+         id="rect718"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="243.82001"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect720" />
+         id="rect720"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="253.10001"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect723" />
+         id="rect723"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="271.69"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect726" />
+         id="rect726"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="280.97"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect729" />
+         id="rect729"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="290.26001"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect732" />
+         id="rect732"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="299.54001"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect734" />
+         id="rect734"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="318.10999"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect737" />
+         id="rect737"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="206.69"
+         x="192.89236"
          y="327.39001"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect740" />
+         id="rect740"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="206.67999"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect743" />
+         id="rect743"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="225.25"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect747" />
+         id="rect747"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="234.53"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect750" />
+         id="rect750"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="253.10001"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect754" />
+         id="rect754"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="271.69"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect758" />
+         id="rect758"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="280.97"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect761" />
+         id="rect761"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="290.26001"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect765" />
+         id="rect765"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="299.54001"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect768" />
+         id="rect768"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="318.10999"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect771" />
+         id="rect771"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-17"
-         x="335.95001"
+         x="335.9595"
          y="327.39001"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect774" />
+         id="rect774"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-24"
          x="302.60001"
@@ -2759,60 +2813,68 @@
          id="rect782" />
       <rect
          class="cls-7"
-         x="335.95001"
+         x="335.9595"
          y="308.82001"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect783" />
+         id="rect783"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-7"
-         x="335.95001"
+         x="335.9595"
          y="262.38"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect785" />
+         id="rect785"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-7"
-         x="335.95001"
+         x="335.9595"
          y="215.97"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect787" />
+         id="rect787"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-7"
-         x="335.95001"
+         x="335.9595"
          y="169.55"
-         width="27.42"
+         width="41.134762"
          height="6.4000001"
-         id="rect789" />
+         id="rect789"
+         style="stroke-width:1.22482" />
       <rect
          class="cls-7"
-         x="206.69"
+         x="192.89236"
          y="308.82001"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect791" />
+         id="rect791"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-7"
-         x="206.69"
+         x="192.89236"
          y="262.38"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect793" />
+         id="rect793"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-7"
-         x="206.69"
+         x="192.89236"
          y="169.55"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect795" />
+         id="rect795"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-7"
-         x="206.69"
+         x="192.89236"
          y="215.97"
-         width="27.42"
+         width="41.217648"
          height="6.4000001"
-         id="rect797" />
+         id="rect797"
+         style="stroke-width:1.22605" />
       <rect
          class="cls-28"
          x="-142.57037"
@@ -2826,493 +2888,510 @@
        id="text_labels"
        style="display:inline"
        transform="translate(-128.50923,-47.383538)">
-      <text
-         x="168.092"
-         y="91.306"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin01"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP0</text>
-      <text
-         x="168.092"
-         y="103.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin02"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP1</text>
-      <text
-         x="168.092"
-         y="115.565"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin03"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="168.092"
-         y="127.769"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin04"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP2</text>
-      <text
-         x="168.092"
-         y="139.97301"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin05"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP3</text>
-      <text
-         x="168.092"
-         y="152.10201"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin06"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP4</text>
-      <text
-         x="168.092"
-         y="164.23199"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin07"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP5</text>
-      <text
-         x="168.092"
-         y="176.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin08"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="168.092"
-         y="188.64"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin09"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP6</text>
-      <text
-         x="168.092"
-         y="200.769"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin10"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP7</text>
-      <text
-         x="168.092"
-         y="212.97301"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin11"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP8</text>
-      <text
-         x="168.092"
-         y="225.103"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin12"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP9</text>
-      <text
-         x="168.092"
-         y="237.306"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin13"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="168.092"
-         y="249.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin14"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP10</text>
-      <text
-         x="168.092"
-         y="261.64001"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin15"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP11</text>
-      <text
-         x="168.092"
-         y="273.76901"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin16"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP12</text>
-      <text
-         x="168.092"
-         y="285.97299"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin17"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP13</text>
-      <text
-         x="168.092"
-         y="298.103"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin18"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="168.092"
-         y="310.30701"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin19"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP14</text>
-      <text
-         x="168.092"
-         y="322.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin20"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP15</text>
-      <text
-         x="337.673"
-         y="91.306"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin40"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">VBUS</text>
-      <text
-         x="337.673"
-         y="103.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin39"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">VSYS</text>
-      <text
-         x="337.673"
-         y="115.565"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin38"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="337.673"
-         y="127.769"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.1px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin37"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3V3_EN</text>
-      <text
-         x="337.673"
-         y="139.97301"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="7.38px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin36"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3V3(OUT)</text>
-      <text
-         x="337.673"
-         y="152.10201"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="7.38px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin35"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">ADC_VREF</text>
-      <text
-         x="337.673"
-         y="164.23199"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin34"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP28</text>
-      <text
-         x="337.673"
-         y="176.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin33"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="337.673"
-         y="188.64"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin32"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP27</text>
-      <text
-         x="337.673"
-         y="200.769"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin31"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP26</text>
-      <text
-         x="337.673"
-         y="212.97301"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin30"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">RUN</text>
-      <text
-         x="337.673"
-         y="225.103"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin29"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP22</text>
-      <text
-         x="337.673"
-         y="237.306"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin28"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="337.673"
-         y="249.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin27"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP21</text>
-      <text
-         x="337.673"
-         y="261.64001"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin26"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP20</text>
-      <text
-         x="337.673"
-         y="273.76901"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin25"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP19</text>
-      <text
-         x="337.673"
-         y="285.97299"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin24"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP18</text>
-      <text
-         x="337.673"
-         y="298.103"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin23"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
-      <text
-         x="337.673"
-         y="310.30701"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin22"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP17</text>
-      <text
-         x="337.673"
-         y="322.436"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="pin21"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP16</text>
-      <text
-         x="200.535"
-         y="71.809998"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="6.75px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         id="led_label"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">LED (WL_GPIO0)</text>
-      <text
-         x="255.896"
-         y="352.57401"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.1px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         transform="rotate(-90,255.896,352.574)"
-         id="swd_swclk"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">SWCLK</text>
-      <text
-         x="280.302"
-         y="352.57401"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.1px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         transform="rotate(-90,280.302,352.574)"
-         id="swd_swdio"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">SWDIO</text>
-      <text
-         x="268.099"
-         y="352.57401"
-         fill="#ffffff"
-         font-family="Arial, Helvetica, sans-serif"
-         font-size="8.55px"
-         font-weight="700"
-         text-anchor="middle"
-         dominant-baseline="middle"
-         transform="rotate(-90,268.099,352.574)"
-         id="swd_gnd"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+      <g
+         id="g4"
+         inkscape:label="Left Pins"
+         transform="translate(-8.8494387)">
+        <text
+           x="168.092"
+           y="91.306"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin01"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP0</text>
+        <text
+           x="168.092"
+           y="103.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin02"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP1</text>
+        <text
+           x="168.092"
+           y="115.565"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin03"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="168.092"
+           y="127.769"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin04"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP2</text>
+        <text
+           x="168.092"
+           y="139.97301"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin05"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP3</text>
+        <text
+           x="168.092"
+           y="152.10201"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin06"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP4</text>
+        <text
+           x="168.092"
+           y="164.23199"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin07"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP5</text>
+        <text
+           x="168.092"
+           y="176.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin08"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="168.092"
+           y="188.64"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin09"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP6</text>
+        <text
+           x="168.092"
+           y="200.769"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin10"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP7</text>
+        <text
+           x="168.092"
+           y="212.97301"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin11"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP8</text>
+        <text
+           x="168.092"
+           y="225.103"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin12"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP9</text>
+        <text
+           x="168.092"
+           y="237.306"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin13"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="168.092"
+           y="249.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin14"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP10</text>
+        <text
+           x="168.092"
+           y="261.64001"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin15"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP11</text>
+        <text
+           x="168.092"
+           y="273.76901"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin16"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP12</text>
+        <text
+           x="168.092"
+           y="285.97299"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin17"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP13</text>
+        <text
+           x="168.092"
+           y="298.103"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin18"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="168.092"
+           y="310.30701"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin19"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP14</text>
+        <text
+           x="168.092"
+           y="322.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin20"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP15</text>
+      </g>
+      <g
+         id="g5"
+         inkscape:label="Right Pins"
+         transform="translate(8.8774637)">
+        <text
+           x="337.673"
+           y="91.306"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin40"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">VBUS</text>
+        <text
+           x="337.673"
+           y="103.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin39"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">VSYS</text>
+        <text
+           x="337.673"
+           y="115.565"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin38"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="337.673"
+           y="127.769"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.1px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin37"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3V3_EN</text>
+        <text
+           x="337.673"
+           y="139.97301"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="7.38px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin36"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">3V3(OUT)</text>
+        <text
+           x="337.673"
+           y="152.10201"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="7.38px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin35"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">ADC_VREF</text>
+        <text
+           x="337.673"
+           y="164.23199"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin34"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP28</text>
+        <text
+           x="337.673"
+           y="176.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin33"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="337.673"
+           y="188.64"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin32"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP27</text>
+        <text
+           x="337.673"
+           y="200.769"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin31"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP26</text>
+        <text
+           x="337.673"
+           y="212.97301"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin30"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">RUN</text>
+        <text
+           x="337.673"
+           y="225.103"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin29"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP22</text>
+        <text
+           x="337.673"
+           y="237.306"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin28"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="337.673"
+           y="249.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin27"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP21</text>
+        <text
+           x="337.673"
+           y="261.64001"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin26"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP20</text>
+        <text
+           x="337.673"
+           y="273.76901"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin25"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP19</text>
+        <text
+           x="337.673"
+           y="285.97299"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin24"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP18</text>
+        <text
+           x="337.673"
+           y="298.103"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin23"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+        <text
+           x="337.673"
+           y="310.30701"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin22"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP17</text>
+        <text
+           x="337.673"
+           y="322.436"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="pin21"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GP16</text>
+      </g>
+      <g
+         id="g7">
+        <text
+           x="200.535"
+           y="71.809998"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="6.75px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           id="led_label"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">LED (WL_GPIO0)</text>
+      </g>
+      <g
+         id="g6"
+         inkscape:label="Debug Pins">
+        <text
+           x="255.896"
+           y="352.57401"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.1px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           transform="rotate(-90,255.896,352.574)"
+           id="swd_swclk"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">SWCLK</text>
+        <text
+           x="280.302"
+           y="352.57401"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.1px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           transform="rotate(-90,280.302,352.574)"
+           id="swd_swdio"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">SWDIO</text>
+        <text
+           x="268.099"
+           y="352.57401"
+           fill="#ffffff"
+           font-family="Arial, Helvetica, sans-serif"
+           font-size="8.55px"
+           font-weight="700"
+           text-anchor="middle"
+           dominant-baseline="middle"
+           transform="rotate(-90,268.099,352.574)"
+           id="swd_gnd"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.33333px;font-family:Arial, Helvetica, sans-serif;-inkscape-font-specification:'Arial, Helvetica, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">GND</text>
+      </g>
     </g>
   </g>
 </svg>

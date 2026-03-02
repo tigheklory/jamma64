@@ -21,6 +21,9 @@ old/
 
 # Lock files
 *.lck
+# KiCad local autosave marker/cache
+\#auto_saved_files\#
+fp-info-cache
 
 # Netlist cache (safe to ignore)
 *.net

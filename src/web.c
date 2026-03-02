@@ -57,6 +57,9 @@ static const arcade_phys_map_t k_arcade_phys[] = {
   { "P1_LP", IN_P1_B1 }, { "P1_MP", IN_P1_B2 }, { "P1_HP", IN_P1_B3 },
   { "P1_LK", IN_P1_B4 }, { "P1_MK", IN_P1_B5 }, { "P1_HK", IN_P1_B6 },
   { "P1_START", IN_P1_START },
+  { "P2_LP", IN_P2_B1 }, { "P2_MP", IN_P2_B2 }, { "P2_HP", IN_P2_B3 },
+  { "P2_LK", IN_P2_B4 }, { "P2_MK", IN_P2_B5 }, { "P2_HK", IN_P2_B6 },
+  { "P2_START", IN_P2_START },
 };
 
 static const char *btn_code_for_output(n64_out_t out) {
@@ -85,10 +88,10 @@ static const char *btn_code_for_output(n64_out_t out) {
 
 static const char *find_btn_for_phys(const volatile profile_t *p, phys_in_t phys) {
   if (!p) return "";
-  for (int out = 0; out < N64_OUTPUT_COUNT; out++) {
-    if (p->map[out] == (uint8_t)phys) return btn_code_for_output((n64_out_t)out);
-  }
-  return "";
+  if ((uint8_t)phys >= IN_COUNT) return "";
+  uint8_t out = p->map[(uint8_t)phys];
+  if (out == 0xFFu || out >= N64_OUTPUT_COUNT) return "";
+  return btn_code_for_output((n64_out_t)out);
 }
 
 static size_t build_status_json(char *out, size_t out_max) {
@@ -125,39 +128,46 @@ static bool parse_arcade_key(const char *key, phys_in_t *out) {
   return false;
 }
 
+static const char *canonical_n64_token(const char *name) {
+  if (!name) return NULL;
+  return name;
+}
+
 static bool parse_btn_to_output(const char *btn, n64_out_t *out) {
   if (!btn || !out) return false;
-  if (!strcasecmp(btn, "a")) { *out = N64_A; return true; }
-  if (!strcasecmp(btn, "b")) { *out = N64_B; return true; }
-  if (!strcasecmp(btn, "z")) { *out = N64_Z; return true; }
-  if (!strcasecmp(btn, "start")) { *out = N64_START; return true; }
-  if (!strcasecmp(btn, "l")) { *out = N64_L; return true; }
-  if (!strcasecmp(btn, "r")) { *out = N64_R; return true; }
-  if (!strcasecmp(btn, "cu")) { *out = N64_CU; return true; }
-  if (!strcasecmp(btn, "cd")) { *out = N64_CD; return true; }
-  if (!strcasecmp(btn, "cl")) { *out = N64_CL; return true; }
-  if (!strcasecmp(btn, "cr")) { *out = N64_CR; return true; }
-  if (!strcasecmp(btn, "du")) { *out = N64_DU; return true; }
-  if (!strcasecmp(btn, "dd")) { *out = N64_DD; return true; }
-  if (!strcasecmp(btn, "dl")) { *out = N64_DL; return true; }
-  if (!strcasecmp(btn, "dr")) { *out = N64_DR; return true; }
-  if (!strcasecmp(btn, "au")) { *out = N64_AU; return true; }
-  if (!strcasecmp(btn, "ad")) { *out = N64_AD; return true; }
-  if (!strcasecmp(btn, "al")) { *out = N64_AL; return true; }
-  if (!strcasecmp(btn, "ar")) { *out = N64_AR; return true; }
+  const char *canon = canonical_n64_token(btn);
+  if (!canon) return false;
+  if (!strcasecmp(canon, "a")) { *out = N64_A; return true; }
+  if (!strcasecmp(canon, "b")) { *out = N64_B; return true; }
+  if (!strcasecmp(canon, "z")) { *out = N64_Z; return true; }
+  if (!strcasecmp(canon, "start")) { *out = N64_START; return true; }
+  if (!strcasecmp(canon, "l")) { *out = N64_L; return true; }
+  if (!strcasecmp(canon, "r")) { *out = N64_R; return true; }
+  if (!strcasecmp(canon, "cu")) { *out = N64_CU; return true; }
+  if (!strcasecmp(canon, "cd")) { *out = N64_CD; return true; }
+  if (!strcasecmp(canon, "cl")) { *out = N64_CL; return true; }
+  if (!strcasecmp(canon, "cr")) { *out = N64_CR; return true; }
+  if (!strcasecmp(canon, "du")) { *out = N64_DU; return true; }
+  if (!strcasecmp(canon, "dd")) { *out = N64_DD; return true; }
+  if (!strcasecmp(canon, "dl")) { *out = N64_DL; return true; }
+  if (!strcasecmp(canon, "dr")) { *out = N64_DR; return true; }
+  if (!strcasecmp(canon, "au")) { *out = N64_AU; return true; }
+  if (!strcasecmp(canon, "ad")) { *out = N64_AD; return true; }
+  if (!strcasecmp(canon, "al")) { *out = N64_AL; return true; }
+  if (!strcasecmp(canon, "ar")) { *out = N64_AR; return true; }
   return false;
 }
 
 static void clear_assignments_for_phys(profile_t *p, phys_in_t phys) {
-  for (int i = 0; i < N64_OUTPUT_COUNT; i++) {
-    if (p->map[i] == (uint8_t)phys) p->map[i] = 0xFFu;
-  }
+  if (!p) return;
+  if ((uint8_t)phys >= IN_COUNT) return;
+  p->map[(uint8_t)phys] = 0xFFu;
 }
 
 static void apply_arcade_assignment(profile_t *p, phys_in_t phys, n64_out_t out) {
   if (!p) return;
-  clear_assignments_for_phys(p, phys);
-  p->map[out] = (uint8_t)phys;
+  if ((uint8_t)phys >= IN_COUNT) return;
+  p->map[(uint8_t)phys] = (uint8_t)out;
 }
 
 static const char *cgi_map_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
@@ -223,6 +233,14 @@ static const char *cgi_map_handler(int iIndex, int iNumParams, char *pcParam[], 
       continue;
     }
     if (!parse_arcade_key(pcParam[i], &phys)) continue;
+    // Explicitly support unassigning a physical input from web mapping sync.
+    if (!pcValue[i] || !pcValue[i][0] ||
+        !strcasecmp(pcValue[i], "none") ||
+        !strcasecmp(pcValue[i], "off")) {
+      clear_assignments_for_phys(&next, phys);
+      changed = true;
+      continue;
+    }
     if (!parse_btn_to_output(pcValue[i], &out)) continue;
     apply_arcade_assignment(&next, phys, out);
     changed = true;
@@ -266,34 +284,40 @@ static const char* cgi_mode_handler(int iIndex, int iNumParams, char *pcParam[],
 
 static bool parse_n64_button_name(const char *name, n64_out_t *out) {
   if (!name || !out) return false;
-  if (!strcasecmp(name, "a")) { *out = N64_A; return true; }
-  if (!strcasecmp(name, "b")) { *out = N64_B; return true; }
-  if (!strcasecmp(name, "z")) { *out = N64_Z; return true; }
-  if (!strcasecmp(name, "start")) { *out = N64_START; return true; }
-  if (!strcasecmp(name, "l")) { *out = N64_L; return true; }
-  if (!strcasecmp(name, "r")) { *out = N64_R; return true; }
-  if (!strcasecmp(name, "cu") || !strcasecmp(name, "c_up")) { *out = N64_CU; return true; }
-  if (!strcasecmp(name, "cd") || !strcasecmp(name, "c_down")) { *out = N64_CD; return true; }
-  if (!strcasecmp(name, "cl") || !strcasecmp(name, "c_left")) { *out = N64_CL; return true; }
-  if (!strcasecmp(name, "cr") || !strcasecmp(name, "c_right")) { *out = N64_CR; return true; }
+  const char *canon = canonical_n64_token(name);
+  if (!canon) return false;
+  if (!strcasecmp(canon, "a")) { *out = N64_A; return true; }
+  if (!strcasecmp(canon, "b")) { *out = N64_B; return true; }
+  if (!strcasecmp(canon, "z")) { *out = N64_Z; return true; }
+  if (!strcasecmp(canon, "start")) { *out = N64_START; return true; }
+  if (!strcasecmp(canon, "l")) { *out = N64_L; return true; }
+  if (!strcasecmp(canon, "r")) { *out = N64_R; return true; }
+  if (!strcasecmp(canon, "cu")) { *out = N64_CU; return true; }
+  if (!strcasecmp(canon, "cd")) { *out = N64_CD; return true; }
+  if (!strcasecmp(canon, "cl")) { *out = N64_CL; return true; }
+  if (!strcasecmp(canon, "cr")) { *out = N64_CR; return true; }
   return false;
 }
 
 static bool parse_n64_dpad_name(const char *name, n64_virtual_dpad_dir_t *dir) {
   if (!name || !dir) return false;
-  if (!strcasecmp(name, "du") || !strcasecmp(name, "d_up")) { *dir = N64_VDPAD_UP; return true; }
-  if (!strcasecmp(name, "dd") || !strcasecmp(name, "d_down")) { *dir = N64_VDPAD_DOWN; return true; }
-  if (!strcasecmp(name, "dl") || !strcasecmp(name, "d_left")) { *dir = N64_VDPAD_LEFT; return true; }
-  if (!strcasecmp(name, "dr") || !strcasecmp(name, "d_right")) { *dir = N64_VDPAD_RIGHT; return true; }
+  const char *canon = canonical_n64_token(name);
+  if (!canon) return false;
+  if (!strcasecmp(canon, "du")) { *dir = N64_VDPAD_UP; return true; }
+  if (!strcasecmp(canon, "dd")) { *dir = N64_VDPAD_DOWN; return true; }
+  if (!strcasecmp(canon, "dl")) { *dir = N64_VDPAD_LEFT; return true; }
+  if (!strcasecmp(canon, "dr")) { *dir = N64_VDPAD_RIGHT; return true; }
   return false;
 }
 
 static bool parse_n64_analog_name(const char *name, n64_virtual_analog_dir_t *dir) {
   if (!name || !dir) return false;
-  if (!strcasecmp(name, "au") || !strcasecmp(name, "analog_up")) { *dir = N64_VANALOG_UP; return true; }
-  if (!strcasecmp(name, "ad") || !strcasecmp(name, "analog_down")) { *dir = N64_VANALOG_DOWN; return true; }
-  if (!strcasecmp(name, "al") || !strcasecmp(name, "analog_left")) { *dir = N64_VANALOG_LEFT; return true; }
-  if (!strcasecmp(name, "ar") || !strcasecmp(name, "analog_right")) { *dir = N64_VANALOG_RIGHT; return true; }
+  const char *canon = canonical_n64_token(name);
+  if (!canon) return false;
+  if (!strcasecmp(canon, "au")) { *dir = N64_VANALOG_UP; return true; }
+  if (!strcasecmp(canon, "ad")) { *dir = N64_VANALOG_DOWN; return true; }
+  if (!strcasecmp(canon, "al")) { *dir = N64_VANALOG_LEFT; return true; }
+  if (!strcasecmp(canon, "ar")) { *dir = N64_VANALOG_RIGHT; return true; }
   return false;
 }
 
@@ -335,6 +359,18 @@ static const tCGI cgis[] = {
   { "/map.cgi", cgi_map_handler }
 };
 
+static u16_t ssi_write_text(char *dst, int dst_len, const char *text) {
+  if (!dst || dst_len <= 0) return 0;
+  int n = snprintf(dst, (size_t)dst_len, "%s", text ? text : "");
+  if (n < 0) {
+    dst[0] = '\0';
+    return 0;
+  }
+  // snprintf returns the would-be length; return actual bytes written.
+  size_t used = strnlen(dst, (size_t)dst_len);
+  return (u16_t)used;
+}
+
 static u16_t ssi_handler(
     int iIndex,
     char *pcInsert,
@@ -347,32 +383,26 @@ static u16_t ssi_handler(
 
   switch (iIndex) {
     case 0: { // fw
-      int n = snprintf(pcInsert, (size_t)iInsertLen, "%s", JAMMA64_FW_VERSION);
-      return (u16_t)((n > 0) ? n : 0);
+      return ssi_write_text(pcInsert, iInsertLen, JAMMA64_FW_VERSION);
     }
     case 1: { // build
-      int n = snprintf(pcInsert, (size_t)iInsertLen, "%s", JAMMA64_BUILD_DATE);
-      return (u16_t)((n > 0) ? n : 0);
+      return ssi_write_text(pcInsert, iInsertLen, JAMMA64_BUILD_DATE);
     }
     case 2: { // profiles json
-      char tmp[192];
+      char tmp[256];
       size_t used = build_profiles_json(tmp, sizeof(tmp));
       if (used == 0u) {
-        int n = snprintf(pcInsert, (size_t)iInsertLen, "{\"active\":\"\",\"names\":[]}");
-        return (u16_t)((n > 0) ? n : 0);
+        return ssi_write_text(pcInsert, iInsertLen, "{\"active\":\"\",\"names\":[]}");
       }
-      int n = snprintf(pcInsert, (size_t)iInsertLen, "%s", tmp);
-      return (u16_t)((n > 0) ? n : 0);
+      return ssi_write_text(pcInsert, iInsertLen, tmp);
     }
     case 3: { // status json
-      char tmp[320];
+      char tmp[768];
       size_t used = build_status_json(tmp, sizeof(tmp));
       if (used == 0u) {
-        int n = snprintf(pcInsert, (size_t)iInsertLen, "{\"p1\":\"dpad\",\"throw\":80,\"diagpct\":95,\"map\":{}}");
-        return (u16_t)((n > 0) ? n : 0);
+        return ssi_write_text(pcInsert, iInsertLen, "{\"p1\":\"dpad\",\"throw\":80,\"diagpct\":95,\"map\":{}}");
       }
-      int n = snprintf(pcInsert, (size_t)iInsertLen, "%s", tmp);
-      return (u16_t)((n > 0) ? n : 0);
+      return ssi_write_text(pcInsert, iInsertLen, tmp);
     }
     default:
       return 0;

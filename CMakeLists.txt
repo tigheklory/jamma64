@@ -12,8 +12,10 @@ set(CMAKE_CXX_STANDARD 17)
 # Build toggles for timing-focused validation.
 option(JAMMA64_ENABLE_WIFI "Enable Wi-Fi/web stack" ON)
 option(JAMMA64_ENABLE_N64_DIAG "Enable verbose N64 protocol diagnostics" OFF)
+option(JAMMA64_ENABLE_N64_DBG_TX "Enable N64 debug timing strobe output pin" OFF)
 option(JAMMA64_ENABLE_STATUS_PRINTS "Enable 1 Hz status prints" OFF)
 option(JAMMA64_ENABLE_USB_DEBUG "Enable USB CDC/stdout debug prints" OFF)
+set(JAMMA64_N64_DBG_TX_PIN "4" CACHE STRING "GPIO for optional N64 debug timing strobe (default GP4, physical pin 6)")
 set(JAMMA64_RX_TO_TX_DELAY_US "0" CACHE STRING "N64 RX->TX turnaround delay in microseconds")
 set(JAMMA64_N64_BACKEND "builtin" CACHE STRING "N64 backend: builtin or joybus")
 set_property(CACHE JAMMA64_N64_BACKEND PROPERTY STRINGS builtin joybus)
@@ -29,6 +31,12 @@ if(JAMMA64_ENABLE_N64_DIAG)
   set(JAMMA64_ENABLE_N64_DIAG_DEF 1)
 else()
   set(JAMMA64_ENABLE_N64_DIAG_DEF 0)
+endif()
+
+if(JAMMA64_ENABLE_N64_DBG_TX)
+  set(JAMMA64_ENABLE_N64_DBG_TX_DEF 1)
+else()
+  set(JAMMA64_ENABLE_N64_DBG_TX_DEF 0)
 endif()
 
 if(JAMMA64_ENABLE_STATUS_PRINTS)
@@ -79,10 +87,8 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
   ${CMAKE_CURRENT_LIST_DIR}/content/wiring.shtml
   ${CMAKE_CURRENT_LIST_DIR}/content/img/favicon.ico
   ${CMAKE_CURRENT_LIST_DIR}/content/img/jamma64-itouch-icon.png
-  ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
-  ${CMAKE_CURRENT_LIST_DIR}/content/img/pico_2w_pinout_text_labels.svg
+  ${CMAKE_CURRENT_LIST_DIR}/content/img/pico_2w_pinout_text_large_labels.svg
   ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svg
-  ${CMAKE_CURRENT_LIST_DIR}/content/img/capcom_2p_layout_lineart_hover.svgz
   ${CMAKE_CURRENT_LIST_DIR}/content/img/controller_clickable_jamma64_v8.svgz
 )
 
@@ -137,6 +143,8 @@ target_compile_definitions(jamma64 PRIVATE
   JAMMA64_BUILD_DATE=\"${JAMMA64_BUILD_DATE_STR}\"
   JAMMA64_ENABLE_WIFI=${JAMMA64_ENABLE_WIFI_DEF}
   JAMMA64_ENABLE_N64_DIAG=${JAMMA64_ENABLE_N64_DIAG_DEF}
+  JAMMA64_ENABLE_N64_DBG_TX=${JAMMA64_ENABLE_N64_DBG_TX_DEF}
+  JAMMA64_N64_DBG_TX_PIN=${JAMMA64_N64_DBG_TX_PIN}
   JAMMA64_ENABLE_STATUS_PRINTS=${JAMMA64_ENABLE_STATUS_PRINTS_DEF}
   JAMMA64_ENABLE_USB_DEBUG=${JAMMA64_ENABLE_USB_DEBUG_DEF}
   JAMMA64_RX_TO_TX_DELAY_US=${JAMMA64_RX_TO_TX_DELAY_US}
